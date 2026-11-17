@@ -2,7 +2,7 @@ import Avatar from './Avatar.jsx'
 import { MEMBERS } from '../data/sampleData.js'
 
 // One task card. Click (or Enter) opens the task; drag moves it to another column.
-export default function TaskCard({ task, criteria, onOpen }) {
+export default function TaskCard({ task, criteria, aiCount, onOpen }) {
   const assignee = MEMBERS.find((m) => m.id === task.assigneeId)
   const tags = criteria.filter((c) => (task.criteria ?? []).includes(c.id))
 
@@ -40,6 +40,11 @@ export default function TaskCard({ task, criteria, onOpen }) {
           </span>
         ))}
         {tags.length > 2 && <span className="tag tag--more">+{tags.length - 2}</span>}
+        {aiCount > 0 && (
+          <span className="tag tag--ai" title={`${aiCount} AI log ${aiCount === 1 ? 'entry' : 'entries'}`}>
+            AI {aiCount}
+          </span>
+        )}
         <span className="points">{task.points} pts</span>
         <Avatar member={assignee} />
       </div>

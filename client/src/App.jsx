@@ -6,7 +6,7 @@ import RubricCoverage from './components/RubricCoverage.jsx'
 import TaskPanel from './components/TaskPanel.jsx'
 import NewTaskDialog from './components/NewTaskDialog.jsx'
 import RubricDialog from './components/RubricDialog.jsx'
-import { SAMPLE_CRITERIA, SAMPLE_TASKS, SPRINTS } from './data/sampleData.js'
+import { SAMPLE_AI_LOG, SAMPLE_CRITERIA, SAMPLE_TASKS, SPRINTS } from './data/sampleData.js'
 import { createTask, loadTasks, nextKey, saveTasks, updateTask } from './lib/tasks.js'
 import {
   cleanCriteria,
@@ -16,6 +16,7 @@ import {
   saveCriteria,
   toggleCriterion,
 } from './lib/rubric.js'
+import { addAiEntry, aiCount, aiCountByTask, entriesForTask, loadAiLog, removeAiEntry, saveAiLog } from './lib/aiLog.js'
 
 const BACKLOG = 'backlog'
 
@@ -27,6 +28,7 @@ function formatDay(isoDate) {
 export default function App() {
   const [tasks, setTasks] = useState(() => loadTasks(SAMPLE_TASKS))
   const [criteria, setCriteria] = useState(() => loadCriteria(SAMPLE_CRITERIA))
+  const [aiLog, setAiLog] = useState(() => loadAiLog(SAMPLE_AI_LOG))
   const [sprintId, setSprintId] = useState(SPRINTS[0].id) // a sprint id, or 'backlog'
   const [openKey, setOpenKey] = useState(null) // task shown in the side panel
   const [isCreating, setIsCreating] = useState(false) // "New task" dialog open?
@@ -41,12 +43,17 @@ export default function App() {
     saveCriteria(criteria)
   }, [criteria])
 
+  useEffect(() => {
+    saveAiLog(aiLog)
+  }, [aiLog])
+
   const sprint = SPRINTS.find((s) => s.id === sprintId)
   const visibleTasks = tasks.filter((t) => (sprintId === BACKLOG ? t.sprintId == null : t.sprintId === sprintId))
   const totalPoints = visibleTasks.reduce((sum, t) => sum + t.points, 0)
   const donePoints = visibleTasks.filter((t) => t.status === 'done').reduce((sum, t) => sum + t.points, 0)
   const openTask = tasks.find((t) => t.key === openKey)
   const coverage = rubricCoverage(tasks, criteria) // T3: which criteria have tasks
+  const sprintAiCount = aiCount(aiLog, visibleTasks.map((t) => t.key)) // T6: the count
 
   function handleCreate(fields) {
     setTasks((current) => createTask(current, { ...fields, sprintId: sprintId === BACKLOG ? null : sprintId }))
@@ -59,6 +66,14 @@ export default function App() {
 
   function handleToggleCriterion(key, criterionId) {
     setTasks((current) => toggleCriterion(current, key, criterionId))
+  }
+
+  function handleAddAi(taskKey, fields) {
+    setAiLog((current) => addAiEntry(current, { ...fields, taskKey }))
+  }
+
+  function handleRemoveAi(id) {
+    setAiLog((current) => removeAiEntry(current, id))
   }
 
   function handleSaveRubric(list) {
@@ -90,6 +105,9 @@ export default function App() {
           <span className="progress">
             {donePoints} / {totalPoints} pts done
           </span>
+          <span className="pill pill--ai">
+            {sprintAiCount} AI log {sprintAiCount === 1 ? 'entry' : 'entries'}
+          </span>
           <button type="button" className="primary-button new-task" onClick={() => setIsCreating(true)}>
             + New task
           </button>
@@ -100,6 +118,7 @@ export default function App() {
         <Board
           tasks={visibleTasks}
           criteria={criteria}
+          aiCounts={aiCountByTask(aiLog)}
           onOpen={setOpenKey}
           onMove={(key, status) => handleUpdate(key, { status })}
         />
@@ -111,6 +130,9 @@ export default function App() {
           criteria={criteria}
           onChange={(changes) => handleUpdate(openTask.key, changes)}
           onToggleCriterion={(criterionId) => handleToggleCriterion(openTask.key, criterionId)}
+          aiEntries={entriesForTask(aiLog, openTask.key)}
+          onAddAi={(fields) => handleAddAi(openTask.key, fields)}
+          onRemoveAi={handleRemoveAi}
           onClose={() => setOpenKey(null)}
         />
       )}
