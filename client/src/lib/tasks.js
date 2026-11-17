@@ -1,26 +1,17 @@
 // Task logic, kept apart from the screens so it is easy to test (T2).
+import { loadJSON, saveJSON } from './storage.js'
 
-const STORAGE_KEY = 'sprintproof.tasks.v1'
+const STORAGE_KEY = 'sprintproof.tasks.v2'
 
 // Read saved tasks. If nothing is saved (or it is unreadable), use the fallback.
-export function loadTasks(fallback, storage = globalThis.localStorage) {
-  try {
-    const saved = storage?.getItem(STORAGE_KEY)
-    if (!saved) return fallback
-    const parsed = JSON.parse(saved)
-    return Array.isArray(parsed) ? parsed : fallback
-  } catch {
-    return fallback
-  }
+export function loadTasks(fallback, storage) {
+  const saved = loadJSON(STORAGE_KEY, null, storage)
+  return Array.isArray(saved) ? saved : fallback
 }
 
 // Save tasks so they survive a page reload.
-export function saveTasks(tasks, storage = globalThis.localStorage) {
-  try {
-    storage?.setItem(STORAGE_KEY, JSON.stringify(tasks))
-  } catch {
-    // Storage blocked or full: the board keeps working in memory.
-  }
+export function saveTasks(tasks, storage) {
+  saveJSON(STORAGE_KEY, tasks, storage)
 }
 
 // Next free key: SP-1, SP-2 ... (one more than the highest number used)
@@ -31,7 +22,7 @@ export function nextKey(tasks) {
 
 // Add a new task with its own key. New tasks start in "To do".
 export function createTask(tasks, fields) {
-  const task = { status: 'todo', ...fields, key: nextKey(tasks) }
+  const task = { status: 'todo', criteria: [], ...fields, key: nextKey(tasks) }
   return [...tasks, task]
 }
 

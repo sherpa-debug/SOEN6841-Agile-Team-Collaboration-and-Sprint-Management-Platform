@@ -373,6 +373,143 @@
   color: var(--text);
 }
 
+/* ---------- Rubric coverage (FR3) ---------- */
+.coverage {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.coverage-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-bottom: 10px;
+}
+.coverage-head h2 {
+  font-size: 16px;
+}
+.coverage-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.coverage-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.coverage-item.is-covered {
+  background: #e7f3ea;
+  color: #2d6a3e;
+}
+.coverage-item.is-missing {
+  background: #fdecd3;
+  color: #9a5a00;
+}
+.coverage-count {
+  font-weight: 400;
+  opacity: 0.8;
+}
+.muted {
+  color: var(--muted);
+  font-size: 14px;
+}
+.link-button {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--brand);
+  font-weight: 600;
+  cursor: pointer;
+}
+.link-button:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Rubric chips (tagging) ---------- */
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+.chip:hover {
+  border-color: var(--brand);
+}
+.chip--on {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 600;
+}
+.tag--more {
+  background: #ececef;
+  color: var(--muted);
+}
+.tag--empty {
+  background: #fdecd3;
+  color: #9a5a00;
+}
+.panel-section {
+  margin-top: 24px;
+}
+.section-label {
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ---------- Rubric editor ---------- */
+.rubric-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.rubric-list li,
+.rubric-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rubric-list input,
+.rubric-add input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.secondary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ---------- Tablet: columns scroll sideways ---------- */
 @media (max-width: 900px) {
   .board {
@@ -433,5 +570,8 @@
   }
   .panel {
     padding: 20px 16px;
+  }
+  .link-button {
+    margin-left: 0;
   }
 }
