@@ -1,9 +1,9 @@
 import Avatar from './Avatar.jsx'
 import Logo from './Logo.jsx'
-import { CURRENT_USER_ID, MEMBERS, SPRINTS, TEAM } from '../data/sampleData.js'
+import { MEMBERS, SPRINTS } from '../data/sampleData.js'
 
-export default function TopBar({ sprintId, onSprintChange }) {
-  const me = MEMBERS.find((m) => m.id === CURRENT_USER_ID)
+export default function TopBar({ sprintId, onSprintChange, session, onSignOut }) {
+  const me = MEMBERS.find((m) => m.name.toLowerCase() === session?.name?.toLowerCase()) || MEMBERS[0]
 
   function handleChange(event) {
     const value = event.target.value
@@ -14,7 +14,7 @@ export default function TopBar({ sprintId, onSprintChange }) {
     <header className="topbar">
       <div className="topbar-brand">
         <Logo />
-        <span className="team-chip">{TEAM.name}</span>
+        <span className="team-chip">{session.team.name}</span>
       </div>
 
       <nav className="topbar-nav" aria-label="Main">
@@ -41,7 +41,13 @@ export default function TopBar({ sprintId, onSprintChange }) {
           ))}
           <option value="backlog">Backlog</option>
         </select>
-        <Avatar member={me} light />
+        <button type="button" className="profile-button" title={`Sign out ${session.name}`} onClick={onSignOut}>
+          {session.avatarUrl ? (
+            <img className="profile-avatar" src={session.avatarUrl} alt="" />
+          ) : (
+            <Avatar member={me} light />
+          )}
+        </button>
       </div>
     </header>
   )
