@@ -68,6 +68,23 @@
   gap: 12px;
   margin-left: auto;
 }
+.profile-button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+.profile-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}
 .sprint-select {
   padding: 6px 10px;
   border: 0;

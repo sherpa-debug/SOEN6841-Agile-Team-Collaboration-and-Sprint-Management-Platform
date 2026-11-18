@@ -17,6 +17,8 @@ import {
   toggleCriterion,
 } from './lib/rubric.js'
 import { addAiEntry, aiCount, aiCountByTask, entriesForTask, loadAiLog, removeAiEntry, saveAiLog } from './lib/aiLog.js'
+import AuthGate from './components/AuthGate.jsx'
+import { loadSession, saveSession } from './lib/auth.js'
 
 const BACKLOG = 'backlog'
 
@@ -26,6 +28,7 @@ function formatDay(isoDate) {
 }
 
 export default function App() {
+  const [session, setSession] = useState(() => loadSession())
   const [tasks, setTasks] = useState(() => loadTasks(SAMPLE_TASKS))
   const [criteria, setCriteria] = useState(() => loadCriteria(SAMPLE_CRITERIA))
   const [aiLog, setAiLog] = useState(() => loadAiLog(SAMPLE_AI_LOG))
@@ -88,9 +91,23 @@ export default function App() {
     setOpenKey(null)
   }
 
+  function handleSessionChange(nextSession) {
+    setSession(nextSession)
+    saveSession(nextSession)
+  }
+
+  if (!session?.team) {
+    return <AuthGate session={session} onSessionChange={handleSessionChange} />
+  }
+
   return (
     <>
-      <TopBar sprintId={sprintId} onSprintChange={handleSprintChange} />
+      <TopBar
+        sprintId={sprintId}
+        onSprintChange={handleSprintChange}
+        session={session}
+        onSignOut={() => handleSessionChange(null)}
+      />
 
       <main className="page">
         <div className="page-head">
