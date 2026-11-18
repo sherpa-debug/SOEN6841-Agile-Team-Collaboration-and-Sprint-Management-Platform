@@ -2,7 +2,7 @@ import { useState } from 'react'
 import TaskCard from './TaskCard.jsx'
 
 // One column. Cards can be dragged and dropped here to change their status.
-export default function Column({ status, tasks, onOpen, onMove }) {
+export default function Column({ status, tasks, criteria, onOpen, onMove }) {
   const [isOver, setIsOver] = useState(false)
 
   function handleDragOver(event) {
@@ -39,7 +39,7 @@ export default function Column({ status, tasks, onOpen, onMove }) {
         {tasks.length === 0 ? (
           <p className="empty">No tasks</p>
         ) : (
-          tasks.map((task) => <TaskCard key={task.key} task={task} onOpen={onOpen} />)
+          tasks.map((task) => <TaskCard key={task.key} task={task} criteria={criteria} onOpen={onOpen} />)
         )}
       </div>
     </section>

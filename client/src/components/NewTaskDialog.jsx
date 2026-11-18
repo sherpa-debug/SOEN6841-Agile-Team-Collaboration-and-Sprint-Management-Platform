@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
+import CriteriaPicker from './CriteriaPicker.jsx'
 import { CURRENT_USER_ID, MEMBERS, POINT_OPTIONS, TASK_TYPES } from '../data/sampleData.js'
 
 // Form to create a task. The key (SP-n) is given automatically.
-export default function NewTaskDialog({ nextKey, onCreate, onCancel }) {
+export default function NewTaskDialog({ nextKey, criteria, onCreate, onCancel }) {
   const [title, setTitle] = useState('')
   const [points, setPoints] = useState(3)
   const [assigneeId, setAssigneeId] = useState(CURRENT_USER_ID)
   const [type, setType] = useState('Implementation')
+  const [tagged, setTagged] = useState([])
   const cleanTitle = title.trim()
 
   useEffect(() => {
@@ -17,10 +19,14 @@ export default function NewTaskDialog({ nextKey, onCreate, onCancel }) {
     return () => window.removeEventListener('keydown', handleKey)
   }, [onCancel])
 
+  function toggleTag(id) {
+    setTagged((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]))
+  }
+
   function handleSubmit(event) {
     event.preventDefault()
     if (!cleanTitle) return
-    onCreate({ title: cleanTitle, points, assigneeId, type })
+    onCreate({ title: cleanTitle, points, assigneeId, type, criteria: tagged })
   }
 
   return (
@@ -87,6 +93,11 @@ export default function NewTaskDialog({ nextKey, onCreate, onCancel }) {
               ))}
             </select>
           </label>
+
+          <div className="field full">
+            <span>Rubric criteria</span>
+            <CriteriaPicker criteria={criteria} selected={tagged} onToggle={toggleTag} />
+          </div>
         </div>
 
         <div className="dialog-actions">
