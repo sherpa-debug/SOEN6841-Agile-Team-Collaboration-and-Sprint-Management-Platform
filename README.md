@@ -75,6 +75,13 @@ Run these commands from the `client` directory:
 | `npm run lint` | Run ESLint |
 | `npm run preview` | Preview the production build locally |
 
+## CI and Deployment (SP-5)
+
+- **CI** (`.github/workflows/ci.yml`): every push and pull request runs `npm ci`, `npm run lint`, `npm test` and `npm run build` in `client/`. A red check means do not merge.
+- **Deploy** (`netlify.toml`, free Netlify plan): every push to `main` runs the tests, builds the app and publishes it. One-time setup: on netlify.com choose **Add new site → Import from GitHub**, pick this repository and the `main` branch; the build settings are read from `netlify.toml`. Pull requests get preview links.
+- **GitHub sign-in on the deployed app** (optional): add the Netlify environment variable `VITE_GITHUB_CLIENT_ID` and set the OAuth callback URL to `<deployed address>/auth/callback`. Without it the deployed app runs in demo mode.
+- **Seeded demo team**: Team Alpha (4 members, 2 sprints, 15 tasks, sample commits and AI entries) lives in `client/src/data/`; `sampleData.test.js` fails if the seed becomes inconsistent.
+
 ## Technology Stack
 
 The implementation technology has not yet been finalized. Proposed technologies will be documented after the project feasibility and architectural decisions are completed.
