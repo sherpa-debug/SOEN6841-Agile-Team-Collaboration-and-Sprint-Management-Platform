@@ -1,7 +1,7 @@
 // Task logic, kept apart from the screens so it is easy to test (T2).
 import { loadJSON, saveJSON } from './storage.js'
 
-const STORAGE_KEY = 'sprintproof.tasks.v4'
+const STORAGE_KEY = 'sprintproof.tasks.v5'
 
 // Read saved tasks. If nothing is saved (or it is unreadable), use the fallback.
 export function loadTasks(fallback, storage) {
