@@ -75,6 +75,13 @@ Run these commands from the `client` directory:
 | `npm run lint` | Run ESLint |
 | `npm run preview` | Preview the production build locally |
 
+## CI and Deployment (SP-5)
+
+- **CI** (`.github/workflows/ci.yml`): every push and pull request runs `npm ci`, `npm run lint`, `npm test` and `npm run build` in `client/`. A red check means do not merge.
+- **Deploy** (`.github/workflows/deploy.yml`): every push to `main` runs the tests again, builds the app and publishes it to GitHub Pages. One-time setup: repository **Settings → Pages → Source: GitHub Actions**. The live address appears in the workflow run.
+- **GitHub sign-in on the deployed app** (optional): add the repository variable `VITE_GITHUB_CLIENT_ID` and set the OAuth callback URL to `<deployed address>/auth/callback`. Without it the deployed app runs in demo mode.
+- **Seeded demo team**: Team Alpha (4 members, 2 sprints, 15 tasks, sample commits and AI entries) lives in `client/src/data/`; `sampleData.test.js` fails if the seed becomes inconsistent.
+
 ## Technology Stack
 
 The implementation technology has not yet been finalized. Proposed technologies will be documented after the project feasibility and architectural decisions are completed.
