@@ -60,3 +60,13 @@ export function aiCountByTask(log) {
   for (const entry of log) counts[entry.taskKey] = (counts[entry.taskKey] ?? 0) + 1
   return counts
 }
+
+// { 1: 3, 4: 1, ... } entries per member (user id), for the dashboard and test T6
+export function aiCountByMember(log) {
+  const counts = {}
+  for (const entry of log) {
+    if (entry.userId == null) continue
+    counts[entry.userId] = (counts[entry.userId] ?? 0) + 1
+  }
+  return counts
+}
