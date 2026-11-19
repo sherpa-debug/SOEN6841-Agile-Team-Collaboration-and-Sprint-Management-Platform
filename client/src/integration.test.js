@@ -27,7 +27,9 @@ describe('task -> commit -> measure, end to end on the seeded team', () => {
     expect(byName.Moncef.prs.value).toBe(3)
     expect(byName.Ming.storyPoints.value).toBe(5)
     expect(byName.Ming.commits.value).toBe(3)
-    expect(byName.Anusha.commits.value).toBe(1)
+    expect(byName.Anusha.storyPoints.value).toBe(3)
+    expect(byName.Anusha.commits.value).toBe(4)
+    expect(byName.Anusha.prs.value).toBe(2)
     expect(byName.Tanzir.commits.value).toBe(2)
   })
 
@@ -56,6 +58,6 @@ describe('task -> commit -> measure, end to end on the seeded team', () => {
     const linked = linkWork(commits, SAMPLE_PULL_REQUESTS, tasks)
     expect(linked.find((w) => w.id === 'abc1234').taskKey).toBe(newKey)
     const anusha = memberMeasures({ member: MEMBERS[2], sprint: sprint1, tasks, work: linked, aiLog: SAMPLE_AI_LOG })
-    expect(anusha.commits.value).toBe(2)
+    expect(anusha.commits.value).toBe(5)
   })
 })
