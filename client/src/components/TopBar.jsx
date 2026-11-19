@@ -32,9 +32,13 @@ export default function TopBar({ view, sprintId, onSprintChange }) {
         >
           Dashboard
         </a>
-        <span className="nav-link disabled" title="Coming with the peer check-in (SP-13)">
+        <a
+          className={`nav-link${view === 'checkin' ? ' active' : ''}`}
+          href="#checkin"
+          aria-current={view === 'checkin' ? 'page' : undefined}
+        >
           Check-in
-        </span>
+        </a>
       </nav>
 
       <div className="topbar-right">
