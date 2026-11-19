@@ -54,6 +54,7 @@ export const SAMPLE_TASKS = [
   { key: 'SP-13', title: 'Peer check-in', sprintId: 2, assigneeId: 1, type: 'Implementation', points: 3, criteria: [2], status: 'todo' },
   { key: 'SP-14', title: 'Integration and regression tests', sprintId: 2, assigneeId: 3, type: 'Testing', points: 5, criteria: [4], status: 'in_progress' },
   { key: 'SP-15', title: 'Acceptance tests and usability session', sprintId: 2, assigneeId: 4, type: 'Testing', points: 3, criteria: [1, 4], status: 'todo' },
+  { key: 'SP-17', title: 'Sprint tracking, SPI/CPI and D4 report', sprintId: 1, assigneeId: 3, type: 'Documentation', points: 3, criteria: [5], status: 'in_progress' },
 ]
 
 // AI use logged on tasks (tool, purpose, and how the result was checked)
