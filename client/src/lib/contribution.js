@@ -1,6 +1,7 @@
 // Contribution measures per member and sprint (FR5, FR9), with the exact items behind
 // each number (NFR5, test T14). Stand-in for the server's contribution engine (SP-4)
 // until its API is ready: the screen will then read the same shape from the API.
+import { peerRating } from './checkin.js'
 
 const KEY_PATTERN = /\bSP-(\d+)\b/i
 export const LATE_WINDOW = 0.2 // the last 20% of the sprint
@@ -41,7 +42,7 @@ export function linkWork(commits, pullRequests, tasks) {
 }
 
 // The six measures of one member in one sprint. Each measure keeps the items it counted.
-export function memberMeasures({ member, sprint, tasks, work, aiLog }) {
+export function memberMeasures({ member, sprint, tasks, work, aiLog, checkins = [] }) {
   const window = sprintWindow(sprint)
   const sprintTasks = tasks.filter((t) => t.sprintId === sprint.id)
   const sprintKeys = new Set(sprintTasks.map((t) => t.key))
@@ -65,8 +66,8 @@ export function memberMeasures({ member, sprint, tasks, work, aiLog }) {
       value: aiLog.filter((e) => e.userId === member.id && sprintKeys.has(e.taskKey)).length,
       items: aiLog.filter((e) => e.userId === member.id && sprintKeys.has(e.taskKey)),
     },
-    // 5. Peer rating: comes with the peer check-in (SP-13)
-    peerRating: { value: null, items: [] },
+    // 5. Average peer rating from submitted check-ins (FR8)
+    peerRating: peerRating(checkins, sprint.id, member.id),
     // 6. Share of commits and PRs made in the last 20% of the sprint (FR9)
     lateShare: {
       value: lateShare,

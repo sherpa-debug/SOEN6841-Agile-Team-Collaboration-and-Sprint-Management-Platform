@@ -54,6 +54,21 @@ function AiItem({ entry }) {
   )
 }
 
+function CheckinItem({ checkin }) {
+  return (
+    <>
+      <p className="drill-main">
+        <span className="drill-stars" aria-label={`${checkin.rating} out of 5`}>
+          {'★'.repeat(checkin.rating)}
+          <span className="drill-stars-off">{'★'.repeat(5 - checkin.rating)}</span>
+        </span>{' '}
+        {checkin.comment}
+      </p>
+      <p className="drill-meta">Submitted {formatWhen(checkin.updatedAt)} · rater not shown</p>
+    </>
+  )
+}
+
 // Side panel listing exactly the items behind a number (NFR5, test T14)
 export default function DrillDown({ drill, criteria, onClose }) {
   useEffect(() => {
@@ -93,6 +108,7 @@ export default function DrillDown({ drill, criteria, onClose }) {
                 {drill.type === 'task' && <TaskItem task={item} criteria={criteria} />}
                 {drill.type === 'work' && <WorkItem item={item} />}
                 {drill.type === 'ai' && <AiItem entry={item} />}
+                {drill.type === 'checkin' && <CheckinItem checkin={item} />}
               </li>
             ))}
           </ul>

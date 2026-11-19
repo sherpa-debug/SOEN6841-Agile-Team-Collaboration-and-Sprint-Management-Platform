@@ -14,7 +14,7 @@ function Metric({ value, label, onOpen, className = '' }) {
 }
 
 // Contribution dashboard (FR5, FR9, NFR5): six measures per member, never one score
-export default function Dashboard({ sprint, tasks, work, aiLog, criteria }) {
+export default function Dashboard({ sprint, tasks, work, aiLog, criteria, checkins }) {
   const [drill, setDrill] = useState(null)
 
   if (!sprint) {
@@ -27,7 +27,7 @@ export default function Dashboard({ sprint, tasks, work, aiLog, criteria }) {
   }
 
   const summary = sprintSummary({ sprint, tasks, work, aiLog })
-  const rows = MEMBERS.map((member) => ({ member, m: memberMeasures({ member, sprint, tasks, work, aiLog }) }))
+  const rows = MEMBERS.map((member) => ({ member, m: memberMeasures({ member, sprint, tasks, work, aiLog, checkins }) }))
   const maxPoints = Math.max(1, ...rows.map((r) => r.m.storyPoints.value))
   const open = (title, subtitle, type, items) => setDrill({ title, subtitle, type, items })
   const sprintName = `Sprint ${sprint.number}`
@@ -43,7 +43,7 @@ export default function Dashboard({ sprint, tasks, work, aiLog, criteria }) {
 
       <p className="notice" role="note">
         Commits and pull requests are <strong>sample data</strong> until GitHub sync (SP-9) is connected. Peer
-        ratings arrive with the peer check-in (SP-13).
+        ratings come from submitted check-ins.
       </p>
 
       <div className="tiles">
@@ -148,9 +148,17 @@ export default function Dashboard({ sprint, tasks, work, aiLog, criteria }) {
                     />
                   </td>
                   <td>
-                    <span className="muted" title="Arrives with the peer check-in (SP-13)">
-                      —
-                    </span>
+                    {m.peerRating.value === null ? (
+                      <span className="muted" title="No submitted check-ins yet">
+                        —
+                      </span>
+                    ) : (
+                      <Metric
+                        value={m.peerRating.value.toFixed(1)}
+                        label={`${member.name}: average peer rating ${m.peerRating.value.toFixed(1)} out of 5. Show the check-ins`}
+                        onOpen={() => open('Peer ratings received', who, 'checkin', m.peerRating.items)}
+                      />
+                    )}
                   </td>
                   <td>
                     <Metric
@@ -167,7 +175,7 @@ export default function Dashboard({ sprint, tasks, work, aiLog, criteria }) {
         </table>
       </div>
 
-      <p className="muted dash-foot">Click any number to open the tasks, commits and AI entries behind it.</p>
+      <p className="muted dash-foot">Click any number to open the tasks, commits, AI entries and check-ins behind it.</p>
 
       {drill && <DrillDown drill={drill} criteria={criteria} onClose={() => setDrill(null)} />}
     </>
