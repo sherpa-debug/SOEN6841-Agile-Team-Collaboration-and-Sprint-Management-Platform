@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest'
-import { addAiEntry, aiCount, aiCountByTask, entriesForTask, loadAiLog, removeAiEntry, saveAiLog } from './aiLog.js'
+import {
+  addAiEntry,
+  aiCount,
+  aiCountByMember,
+  aiCountByTask,
+  entriesForTask,
+  loadAiLog,
+  removeAiEntry,
+  saveAiLog,
+} from './aiLog.js'
 
 // A fake browser storage, so the test runs without a browser
 function fakeStorage() {
@@ -18,8 +27,9 @@ const startLog = [
 ]
 
 describe('T6: a saved AI entry shows on its task and adds 1 to the count', () => {
-  it('shows the new entry on its task and adds 1 to the count', () => {
+  it("shows the new entry on its task and adds 1 to the member's count", () => {
     const before = aiCount(startLog, sprintTasks)
+    const memberBefore = aiCountByMember(startLog)[1] ?? 0
     const log = addAiEntry(
       startLog,
       { taskKey: 'SP-6', userId: 1, tool: 'Claude', purpose: 'Rubric chips', verified: true, check: 'T3 passes' },
@@ -31,6 +41,7 @@ describe('T6: a saved AI entry shows on its task and adds 1 to the count', () =>
     expect(onTask[0].tool).toBe('Claude')
     expect(onTask[0].purpose).toBe('Rubric chips')
     expect(onTask[0].verified).toBe(true)
+    expect(aiCountByMember(log)[1]).toBe(memberBefore + 1)
     expect(aiCount(log, sprintTasks)).toBe(before + 1)
     expect(aiCountByTask(log)['SP-6']).toBe(1)
   })

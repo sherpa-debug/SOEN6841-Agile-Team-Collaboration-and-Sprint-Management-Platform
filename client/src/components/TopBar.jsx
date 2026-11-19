@@ -1,9 +1,9 @@
 import Avatar from './Avatar.jsx'
 import Logo from './Logo.jsx'
-import { MEMBERS, SPRINTS } from '../data/sampleData.js'
+import { CURRENT_USER_ID, MEMBERS, SPRINTS, TEAM } from '../data/sampleData.js'
 
-export default function TopBar({ sprintId, onSprintChange, session, onSignOut }) {
-  const me = MEMBERS.find((m) => m.name.toLowerCase() === session?.name?.toLowerCase()) || MEMBERS[0]
+export default function TopBar({ view, sprintId, onSprintChange }) {
+  const me = MEMBERS.find((m) => m.id === CURRENT_USER_ID)
 
   function handleChange(event) {
     const value = event.target.value
@@ -14,17 +14,25 @@ export default function TopBar({ sprintId, onSprintChange, session, onSignOut })
     <header className="topbar">
       <div className="topbar-brand">
         <Logo />
-        <span className="team-chip">{session.team.name}</span>
+        <span className="team-chip">{TEAM.name}</span>
       </div>
 
       <nav className="topbar-nav" aria-label="Main">
-        <a className="nav-link active" href="#board" aria-current="page">
+        <a
+          className={`nav-link${view === 'board' ? ' active' : ''}`}
+          href="#board"
+          aria-current={view === 'board' ? 'page' : undefined}
+        >
           Board
         </a>
-        <span className="nav-link disabled" title="Coming in Sprint 2">
+        <a
+          className={`nav-link${view === 'dashboard' ? ' active' : ''}`}
+          href="#dashboard"
+          aria-current={view === 'dashboard' ? 'page' : undefined}
+        >
           Dashboard
-        </span>
-        <span className="nav-link disabled" title="Coming in Sprint 2">
+        </a>
+        <span className="nav-link disabled" title="Coming with the peer check-in (SP-13)">
           Check-in
         </span>
       </nav>
@@ -41,13 +49,7 @@ export default function TopBar({ sprintId, onSprintChange, session, onSignOut })
           ))}
           <option value="backlog">Backlog</option>
         </select>
-        <button type="button" className="profile-button" title={`Sign out ${session.name}`} onClick={onSignOut}>
-          {session.avatarUrl ? (
-            <img className="profile-avatar" src={session.avatarUrl} alt="" />
-          ) : (
-            <Avatar member={me} light />
-          )}
-        </button>
+        <Avatar member={me} light />
       </div>
     </header>
   )
