@@ -1,7 +1,7 @@
 // AI log on tasks (FR6, test T6): which tool, what for, and whether the result was checked.
 import { loadJSON, saveJSON } from './storage.js'
 
-const STORAGE_KEY = 'sprintproof.ai.v1'
+const STORAGE_KEY = 'sprintproof.ai.v2'
 
 export function loadAiLog(fallback, storage) {
   const saved = loadJSON(STORAGE_KEY, null, storage)
