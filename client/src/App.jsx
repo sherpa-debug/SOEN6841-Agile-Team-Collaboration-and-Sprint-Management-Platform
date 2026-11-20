@@ -7,11 +7,13 @@ import TaskPanel from './components/TaskPanel.jsx'
 import NewTaskDialog from './components/NewTaskDialog.jsx'
 import RubricDialog from './components/RubricDialog.jsx'
 import Dashboard from './components/Dashboard.jsx'
+import AuthGate from './components/AuthGate.jsx'
 import CheckIn from './components/CheckIn.jsx'
 import { CURRENT_USER_ID, MEMBERS, SAMPLE_AI_LOG, SAMPLE_CRITERIA, SAMPLE_TASKS, SPRINTS } from './data/sampleData.js'
 import { SAMPLE_COMMITS, SAMPLE_PULL_REQUESTS } from './data/sampleWork.js'
 import { linkWork } from './lib/contribution.js'
 import { createTask, loadTasks, nextKey, saveTasks, updateTask } from './lib/tasks.js'
+import { loadSession, saveSession } from './lib/auth.js'
 import {
   cleanCriteria,
   loadCriteria,
@@ -38,10 +40,11 @@ function formatDay(isoDate) {
 }
 
 export default function App() {
+  const [session, setSession] = useState(() => loadSession())
   const [tasks, setTasks] = useState(() => loadTasks(SAMPLE_TASKS))
   const [criteria, setCriteria] = useState(() => loadCriteria(SAMPLE_CRITERIA))
   const [aiLog, setAiLog] = useState(() => loadAiLog(SAMPLE_AI_LOG))
-  const [checkins, setCheckins] = useState(() => loadCheckins([])) // peer check-ins (FR8)
+  const [checkins, setCheckins] = useState(() => loadCheckins([]))
   const [sprintId, setSprintId] = useState(SPRINTS[0].id) // a sprint id, or 'backlog'
   const [openKey, setOpenKey] = useState(null) // task shown in the side panel
   const [isCreating, setIsCreating] = useState(false) // "New task" dialog open?
@@ -105,11 +108,10 @@ export default function App() {
     setAiLog((current) => removeAiEntry(current, id))
   }
 
-  // Save a draft or submit the check-in; returns the problems to show (none when saved)
   function handleSaveCheckin(entries, submit) {
     const result = saveCheckinForm(checkins, {
       sprintId: sprint.id,
-      raterId: CURRENT_USER_ID, // from GitHub sign-in once it is connected
+      raterId: CURRENT_USER_ID,
       teammates: teammatesOf(MEMBERS, CURRENT_USER_ID),
       entries,
       submit,
@@ -130,17 +132,28 @@ export default function App() {
     setOpenKey(null)
   }
 
+  function handleSessionChange(nextSession) {
+    setSession(saveSession(nextSession))
+  }
+
+  if (!session || !session.team) {
+    return <AuthGate session={session} onSessionChange={handleSessionChange} />
+  }
+
   return (
     <>
-      <TopBar view={view} sprintId={sprintId} onSprintChange={handleSprintChange} />
+      <TopBar
+        view={view}
+        sprintId={sprintId}
+        onSprintChange={handleSprintChange}
+        onSignOut={() => handleSessionChange(null)}
+      />
 
-      {view === 'dashboard' && (
+      {view === 'dashboard' ? (
         <main className="page">
           <Dashboard sprint={sprint} tasks={tasks} work={work} aiLog={aiLog} criteria={criteria} checkins={checkins} />
         </main>
-      )}
-
-      {view === 'checkin' && (
+      ) : view === 'checkin' ? (
         <main className="page">
           <CheckIn
             key={sprintId}
@@ -151,9 +164,7 @@ export default function App() {
             onSave={handleSaveCheckin}
           />
         </main>
-      )}
-
-      {view === 'board' && (
+      ) : (
         <main className="page">
           <div className="page-head">
             <div className="page-title">

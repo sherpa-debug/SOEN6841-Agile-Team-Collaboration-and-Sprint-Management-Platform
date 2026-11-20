@@ -2,7 +2,7 @@ import Avatar from './Avatar.jsx'
 import Logo from './Logo.jsx'
 import { CURRENT_USER_ID, MEMBERS, SPRINTS, TEAM } from '../data/sampleData.js'
 
-export default function TopBar({ view, sprintId, onSprintChange }) {
+export default function TopBar({ view, sprintId, onSprintChange, onSignOut }) {
   const me = MEMBERS.find((m) => m.id === CURRENT_USER_ID)
 
   function handleChange(event) {
@@ -54,6 +54,11 @@ export default function TopBar({ view, sprintId, onSprintChange }) {
           <option value="backlog">Backlog</option>
         </select>
         <Avatar member={me} light />
+        {onSignOut && (
+          <button type="button" className="topbar-signout" onClick={onSignOut}>
+            Sign out
+          </button>
+        )}
       </div>
     </header>
   )
