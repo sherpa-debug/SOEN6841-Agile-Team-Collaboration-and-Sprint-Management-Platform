@@ -1,0 +1,37 @@
+# SP-5: deploy main to Netlify from GitHub Actions.
+# Uses an access token, so Netlify's Git contributor check does not block the deploy.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - name: Install, test and build
+        working-directory: client
+        run: |
+          npm ci
+          npm test
+          npm run build
+      - name: Deploy to Netlify (production)
+        run: npx --yes netlify-cli@latest deploy --prod --no-build --dir=client/dist --site "$NETLIFY_SITE_ID" --message "Deploy ${GITHUB_SHA::7} from GitHub Actions"
