@@ -2,7 +2,7 @@ import Column from './Column.jsx'
 import { STATUSES } from '../data/sampleData.js'
 
 // The 3 columns: To do, In progress, Done
-export default function Board({ tasks, criteria, aiCounts, onOpen, onMove }) {
+export default function Board({ tasks, criteria, aiCounts, workCounts, onOpen, onMove }) {
   return (
     <div className="board">
       {STATUSES.map((status) => (
@@ -12,6 +12,7 @@ export default function Board({ tasks, criteria, aiCounts, onOpen, onMove }) {
           tasks={tasks.filter((t) => t.status === status.id)}
           criteria={criteria}
           aiCounts={aiCounts}
+          workCounts={workCounts}
           onOpen={onOpen}
           onMove={onMove}
         />
