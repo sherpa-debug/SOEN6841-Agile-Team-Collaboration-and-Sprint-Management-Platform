@@ -1089,6 +1089,65 @@
   color: #d4d4d8;
 }
 
+/* ---------- Linked work (FR4) ---------- */
+.card-work {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.pill--alert {
+  border: 0;
+  background: #fde2dc;
+  color: #b42318;
+  cursor: pointer;
+}
+.pill--alert:hover {
+  background: #fbd0c6;
+}
+.work-count {
+  margin-left: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #e6ecf7;
+  color: #1e4f91;
+  letter-spacing: 0;
+}
+.linked-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.linked-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  padding: 10px 12px;
+  border: 1px solid #ececef;
+  border-radius: 10px;
+  font-size: 14px;
+}
+.linked-item code,
+.panel-section p code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: #f1f1f4;
+  font-size: 13px;
+}
+.linked-label {
+  flex: 1;
+  min-width: 140px;
+  overflow-wrap: anywhere;
+}
+.linked-meta {
+  width: 100%;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 /* ---------- Tablet: columns scroll sideways ---------- */
 @media (max-width: 900px) {
   .board {

@@ -9,9 +9,11 @@ import RubricDialog from './components/RubricDialog.jsx'
 import Dashboard from './components/Dashboard.jsx'
 import AuthGate from './components/AuthGate.jsx'
 import CheckIn from './components/CheckIn.jsx'
+import DrillDown from './components/DrillDown.jsx'
 import { CURRENT_USER_ID, MEMBERS, SAMPLE_AI_LOG, SAMPLE_CRITERIA, SAMPLE_TASKS, SPRINTS } from './data/sampleData.js'
 import { SAMPLE_COMMITS, SAMPLE_PULL_REQUESTS } from './data/sampleWork.js'
 import { linkWork } from './lib/contribution.js'
+import { unlinkedInSprint, workCountsByTask, workForTask } from './lib/linkedWork.js'
 import { createTask, loadTasks, nextKey, saveTasks, updateTask } from './lib/tasks.js'
 import { loadSession, saveSession } from './lib/auth.js'
 import {
@@ -49,6 +51,7 @@ export default function App() {
   const [openKey, setOpenKey] = useState(null) // task shown in the side panel
   const [isCreating, setIsCreating] = useState(false) // "New task" dialog open?
   const [isEditingRubric, setIsEditingRubric] = useState(false) // "Edit rubric" dialog open?
+  const [showUnlinked, setShowUnlinked] = useState(false) // "Unlinked work" list open?
   const [view, setView] = useState(viewFromHash) // 'board', 'dashboard' or 'checkin'
 
   // Follow the Board / Dashboard / Check-in links (and the browser's back button)
@@ -86,6 +89,7 @@ export default function App() {
   const coverage = rubricCoverage(tasks, criteria) // T3: which criteria have tasks
   const sprintAiCount = aiCount(aiLog, visibleTasks.map((t) => t.key)) // T6: the count
   const work = linkWork(SAMPLE_COMMITS, SAMPLE_PULL_REQUESTS, tasks) // sample until GitHub sync (SP-9)
+  const unlinked = sprint ? unlinkedInSprint(work, sprint) : [] // FR4: work with no task key
 
   function handleCreate(fields) {
     setTasks((current) => createTask(current, { ...fields, sprintId: sprintId === BACKLOG ? null : sprintId }))
@@ -181,6 +185,16 @@ export default function App() {
             <span className="pill pill--ai">
               {sprintAiCount} AI log {sprintAiCount === 1 ? 'entry' : 'entries'}
             </span>
+            {unlinked.length > 0 && (
+              <button
+                type="button"
+                className="pill pill--alert"
+                onClick={() => setShowUnlinked(true)}
+                title="Commits and pull requests that no task key links to"
+              >
+                Unlinked work · {unlinked.length}
+              </button>
+            )}
             <button type="button" className="primary-button new-task" onClick={() => setIsCreating(true)}>
               + New task
             </button>
@@ -192,6 +206,7 @@ export default function App() {
             tasks={visibleTasks}
             criteria={criteria}
             aiCounts={aiCountByTask(aiLog)}
+            workCounts={workCountsByTask(work)}
             onOpen={setOpenKey}
             onMove={(key, status) => handleUpdate(key, { status })}
           />
@@ -205,6 +220,7 @@ export default function App() {
           onChange={(changes) => handleUpdate(openTask.key, changes)}
           onToggleCriterion={(criterionId) => handleToggleCriterion(openTask.key, criterionId)}
           aiEntries={entriesForTask(aiLog, openTask.key)}
+          linkedWork={workForTask(work, openTask.key)}
           onAddAi={(fields) => handleAddAi(openTask.key, fields)}
           onRemoveAi={handleRemoveAi}
           onClose={() => setOpenKey(null)}
@@ -217,6 +233,19 @@ export default function App() {
           criteria={criteria}
           onCreate={handleCreate}
           onCancel={() => setIsCreating(false)}
+        />
+      )}
+
+      {showUnlinked && view === 'board' && sprint && (
+        <DrillDown
+          drill={{
+            title: 'Unlinked work',
+            subtitle: `Sprint ${sprint.number} · commits and PRs without a task key`,
+            type: 'work',
+            items: unlinked,
+          }}
+          criteria={criteria}
+          onClose={() => setShowUnlinked(false)}
         />
       )}
 

@@ -1,10 +1,12 @@
 import Avatar from './Avatar.jsx'
 import { MEMBERS } from '../data/sampleData.js'
+import { describeWork } from '../lib/linkedWork.js'
 
 // One task card. Click (or Enter) opens the task; drag moves it to another column.
-export default function TaskCard({ task, criteria, aiCount, onOpen }) {
+export default function TaskCard({ task, criteria, aiCount, workCount, onOpen }) {
   const assignee = MEMBERS.find((m) => m.id === task.assigneeId)
   const tags = criteria.filter((c) => (task.criteria ?? []).includes(c.id))
+  const linked = describeWork(workCount)
 
   function handleKeyDown(event) {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -48,6 +50,7 @@ export default function TaskCard({ task, criteria, aiCount, onOpen }) {
         <span className="points">{task.points} pts</span>
         <Avatar member={assignee} />
       </div>
+      {linked && <p className="card-work">{linked}</p>}
     </article>
   )
 }

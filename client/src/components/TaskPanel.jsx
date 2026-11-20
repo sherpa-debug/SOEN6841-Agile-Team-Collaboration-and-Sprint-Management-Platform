@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import CriteriaPicker from './CriteriaPicker.jsx'
 import AiLogSection from './AiLogSection.jsx'
+import LinkedWork from './LinkedWork.jsx'
 import { MEMBERS, POINT_OPTIONS, SPRINTS, STATUSES, TASK_TYPES } from '../data/sampleData.js'
 
 function Field({ label, children }) {
@@ -13,7 +14,17 @@ function Field({ label, children }) {
 }
 
 // Side panel with the details of one task. Every change is saved at once.
-export default function TaskPanel({ task, criteria, aiEntries, onChange, onToggleCriterion, onAddAi, onRemoveAi, onClose }) {
+export default function TaskPanel({
+  task,
+  criteria,
+  aiEntries,
+  linkedWork,
+  onChange,
+  onToggleCriterion,
+  onAddAi,
+  onRemoveAi,
+  onClose,
+}) {
   useEffect(() => {
     const handleKey = (event) => {
       if (event.key === 'Escape') onClose()
@@ -103,6 +114,8 @@ export default function TaskPanel({ task, criteria, aiEntries, onChange, onToggl
           <h3 className="section-label">Rubric criteria</h3>
           <CriteriaPicker criteria={criteria} selected={task.criteria ?? []} onToggle={onToggleCriterion} />
         </div>
+
+        <LinkedWork taskKey={task.key} items={linkedWork} />
 
         <AiLogSection entries={aiEntries} onAdd={onAddAi} onRemove={onRemoveAi} />
       </aside>
