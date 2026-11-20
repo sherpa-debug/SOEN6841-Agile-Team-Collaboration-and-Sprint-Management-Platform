@@ -78,8 +78,9 @@ Run these commands from the `client` directory:
 ## CI and Deployment (SP-5)
 
 - **CI** (`.github/workflows/ci.yml`): every push and pull request runs `npm ci`, `npm run lint`, `npm test` and `npm run build` in `client/`. A red check means do not merge.
-- **Deploy** (`netlify.toml`, free Netlify plan): every push to `main` runs the tests, builds the app and publishes it. One-time setup: on netlify.com choose **Add new site → Import from GitHub**, pick this repository and the `main` branch; the build settings are read from `netlify.toml`. Pull requests get preview links.
-- **GitHub sign-in on the deployed app** (optional): add the Netlify environment variable `VITE_GITHUB_CLIENT_ID` and set the OAuth callback URL to `<deployed address>/auth/callback`. Without it the deployed app runs in demo mode.
+- **Deploy** (`.github/workflows/deploy.yml`, free Netlify plan): every push to `main` runs `npm ci`, `npm test` and `npm run build` in `client/`, then publishes `client/dist` to Netlify with the Netlify CLI. Netlify's own Git builds are stopped, because Netlify blocks builds from contributors who are not verified team members on the free plan. You can also run the workflow by hand from the **Actions** tab (**Deploy → Run workflow**). A failing test stops the deploy, so a broken build never goes live.
+- **Deploy setup** (once, by the repository owner): create a Netlify personal access token (Netlify **User settings → Applications**) and add two repository **secrets** under **Settings → Secrets and variables → Actions**: `NETLIFY_AUTH_TOKEN` (the token) and `NETLIFY_SITE_ID` (the Netlify site ID). `netlify.toml` keeps the site's redirect rule for single-page routes such as `/auth/callback`.
+- **GitHub sign-in on the deployed app** (optional): add a repository **variable** (not a secret) named `VITE_GITHUB_CLIENT_ID` under **Settings → Secrets and variables → Actions → Variables**, and set the OAuth callback URL to `<deployed address>/auth/callback`. The deploy workflow passes it into the build. Without it the deployed app runs in demo mode.
 - **Seeded demo team**: Team Alpha (4 members, 2 sprints, 15 tasks, sample commits and AI entries) lives in `client/src/data/`; `sampleData.test.js` fails if the seed becomes inconsistent.
 
 ## Technology Stack
