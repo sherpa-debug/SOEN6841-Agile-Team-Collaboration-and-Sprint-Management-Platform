@@ -142,17 +142,9 @@ Each person must create and work on their **own branch**.
 ```bash
 git checkout main
 git pull origin main
-git checkout -b feature/your-name-task
+git checkout -b our-name-task
 ```
 
-Example:
-
-```text
-main
-├── feature/alice-login
-├── feature/bob-payment
-└── feature/charlie-report
-```
 
 ### 2. Commit and push to your own branch
 
