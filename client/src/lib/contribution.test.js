@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { findKey, linkWork, memberMeasures, sprintSummary } from './contribution.js'
+import { findKey, linkWork, memberMeasures, sprintSummary, sprintWindow } from './contribution.js'
 
 // A small sprint whose numbers are easy to count by hand
 const sprint = { id: 1, start: '2026-11-09', end: '2026-11-18' } // last 20% starts late on Nov 16
@@ -29,7 +29,7 @@ const aiLog = [
 ]
 const work = linkWork(commits, prs, tasks)
 
-describe('Contribution measures (FR5) match hand-computed values', () => {
+describe('T5: contribution measures (FR5) match hand-computed values', () => {
   it('finds the task key in a message or title', () => {
     expect(findKey('SP-12 add chart')).toBe('SP-12')
     expect(findKey('Merge sp-7 into main')).toBe('SP-7')
@@ -74,7 +74,7 @@ describe('T14: each drill-down lists exactly the items counted', () => {
   })
 })
 
-describe('Late-work share (FR9)', () => {
+describe('T9: late-work share (FR9)', () => {
   it('8 of 10 events in the last 20% of the sprint gives 80% and shows the flag', () => {
     const tenCommits = Array.from({ length: 10 }, (_, i) => ({
       sha: `d${i}xxxxxx`,
@@ -85,5 +85,52 @@ describe('Late-work share (FR9)', () => {
     const m = memberMeasures({ member: ming, sprint, tasks, work: linkWork(tenCommits, [], tasks), aiLog })
     expect(m.lateShare.value).toBe(0.8)
     expect(m.lateShare.flagged).toBe(true)
+  })
+})
+
+describe('T9: edges of the late-work share', () => {
+  const { lateFrom } = sprintWindow(sprint)
+  const at = (date) => date.toISOString()
+  const events = (n, date) =>
+    Array.from({ length: n }, (_, i) => ({ sha: `${date.getTime()}${i}`.padEnd(8, 'x'), authorId: 2, message: 'SP-4 work', date: at(date) }))
+  const early = new Date('2026-11-10T10:00:00')
+  const share = (list) => memberMeasures({ member: ming, sprint, tasks, work: linkWork(list, [], tasks), aiLog }).lateShare
+
+  it('flags a member at exactly half (the threshold is "half or more")', () => {
+    const late = share([...events(5, early), ...events(5, lateFrom)])
+    expect(late.value).toBe(0.5)
+    expect(late.flagged).toBe(true)
+  })
+
+  it('does not flag a member below half', () => {
+    const late = share([...events(6, early), ...events(4, lateFrom)])
+    expect(late.value).toBe(0.4)
+    expect(late.flagged).toBe(false)
+  })
+
+  it('counts an event at the very start of the last 20% as late, and one just before as not late', () => {
+    expect(share(events(1, lateFrom)).items).toHaveLength(1)
+    expect(share(events(1, new Date(lateFrom.getTime() - 1000))).items).toHaveLength(0)
+  })
+
+  it('shows 0 and no flag for a member with no activity', () => {
+    const late = share([])
+    expect(late.value).toBe(0)
+    expect(late.total).toBe(0)
+    expect(late.flagged).toBe(false)
+  })
+
+  it('ignores work outside the sprint', () => {
+    const late = share([...events(3, new Date('2026-11-25T10:00:00')), ...events(1, early)])
+    expect(late.total).toBe(1)
+    expect(late.value).toBe(0)
+  })
+
+  it('counts unlinked work too, since late activity is activity', () => {
+    const unkeyed = [{ sha: 'u1uuuuuu', authorId: 2, message: 'fix typo', date: at(lateFrom) }]
+    const late = share(unkeyed)
+    expect(late.total).toBe(1)
+    expect(late.value).toBe(1)
+    expect(late.flagged).toBe(true)
   })
 })
