@@ -29,6 +29,9 @@ jobs:
           cache-dependency-path: client/package-lock.json
       - name: Install, test and build
         working-directory: client
+        env:
+          # Optional repository variable; without it the deployed app runs in demo mode.
+          VITE_GITHUB_CLIENT_ID: ${{ vars.VITE_GITHUB_CLIENT_ID }}
         run: |
           npm ci
           npm test
