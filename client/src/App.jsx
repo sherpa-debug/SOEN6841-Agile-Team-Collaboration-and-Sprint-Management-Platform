@@ -16,6 +16,7 @@ import { linkWork } from './lib/contribution.js'
 import { unlinkedInSprint, workCountsByTask, workForTask } from './lib/linkedWork.js'
 import { createTask, loadTasks, nextKey, saveTasks, updateTask } from './lib/tasks.js'
 import { loadSession, saveSession } from './lib/auth.js'
+import { authorize } from './lib/access.js'
 import {
   cleanCriteria,
   loadCriteria,
@@ -81,6 +82,11 @@ export default function App() {
     saveCheckins(checkins)
   }, [checkins])
 
+  // Role check (NFR3, T7, T12). Staff are read-only; a student reaches only their own team.
+  // This decides what the screen shows; the API must repeat the same check on every request.
+  const can = (action) => authorize(session, { action, teamId: session?.team?.id }).ok
+  const readOnly = !can('update')
+
   const sprint = SPRINTS.find((s) => s.id === sprintId)
   const visibleTasks = tasks.filter((t) => (sprintId === BACKLOG ? t.sprintId == null : t.sprintId === sprintId))
   const totalPoints = visibleTasks.reduce((sum, t) => sum + t.points, 0)
@@ -92,27 +98,33 @@ export default function App() {
   const unlinked = sprint ? unlinkedInSprint(work, sprint) : [] // FR4: work with no task key
 
   function handleCreate(fields) {
+    if (!can('create')) return
     setTasks((current) => createTask(current, { ...fields, sprintId: sprintId === BACKLOG ? null : sprintId }))
     setIsCreating(false)
   }
 
   function handleUpdate(key, changes) {
+    if (!can('update')) return
     setTasks((current) => updateTask(current, key, changes))
   }
 
   function handleToggleCriterion(key, criterionId) {
+    if (!can('update')) return
     setTasks((current) => toggleCriterion(current, key, criterionId))
   }
 
   function handleAddAi(taskKey, fields) {
+    if (!can('create')) return
     setAiLog((current) => addAiEntry(current, { ...fields, taskKey }))
   }
 
   function handleRemoveAi(id) {
+    if (!can('delete')) return
     setAiLog((current) => removeAiEntry(current, id))
   }
 
   function handleSaveCheckin(entries, submit) {
+    if (!can('create')) return { forbidden: 'TAs and instructors have read-only access.' }
     const result = saveCheckinForm(checkins, {
       sprintId: sprint.id,
       raterId: CURRENT_USER_ID,
@@ -125,6 +137,7 @@ export default function App() {
   }
 
   function handleSaveRubric(list) {
+    if (!can('update')) return
     const cleaned = cleanCriteria(list)
     setCriteria(cleaned)
     setTasks((current) => removeMissingCriteria(current, cleaned))
@@ -149,6 +162,8 @@ export default function App() {
       <TopBar
         view={view}
         sprintId={sprintId}
+        readOnly={readOnly}
+        role={session.role}
         onSprintChange={handleSprintChange}
         onSignOut={() => handleSessionChange(null)}
       />
@@ -164,6 +179,7 @@ export default function App() {
             sprint={sprint}
             members={MEMBERS}
             currentUserId={CURRENT_USER_ID}
+            locked={readOnly}
             checkins={checkins}
             onSave={handleSaveCheckin}
           />
@@ -195,18 +211,21 @@ export default function App() {
                 Unlinked work · {unlinked.length}
               </button>
             )}
-            <button type="button" className="primary-button new-task" onClick={() => setIsCreating(true)}>
-              + New task
-            </button>
+            {!readOnly && (
+              <button type="button" className="primary-button new-task" onClick={() => setIsCreating(true)}>
+                + New task
+              </button>
+            )}
           </div>
 
-          <RubricCoverage coverage={coverage} onEdit={() => setIsEditingRubric(true)} />
+          <RubricCoverage coverage={coverage} onEdit={readOnly ? undefined : () => setIsEditingRubric(true)} />
 
           <Board
             tasks={visibleTasks}
             criteria={criteria}
             aiCounts={aiCountByTask(aiLog)}
             workCounts={workCountsByTask(work)}
+            readOnly={readOnly}
             onOpen={setOpenKey}
             onMove={(key, status) => handleUpdate(key, { status })}
           />
@@ -217,6 +236,7 @@ export default function App() {
         <TaskPanel
           task={openTask}
           criteria={criteria}
+          readOnly={readOnly}
           onChange={(changes) => handleUpdate(openTask.key, changes)}
           onToggleCriterion={(criterionId) => handleToggleCriterion(openTask.key, criterionId)}
           aiEntries={entriesForTask(aiLog, openTask.key)}
@@ -227,7 +247,7 @@ export default function App() {
         />
       )}
 
-      {isCreating && (
+      {isCreating && !readOnly && (
         <NewTaskDialog
           nextKey={nextKey(tasks)}
           criteria={criteria}
@@ -249,7 +269,7 @@ export default function App() {
         />
       )}
 
-      {isEditingRubric && (
+      {isEditingRubric && !readOnly && (
         <RubricDialog criteria={criteria} onSave={handleSaveRubric} onCancel={() => setIsEditingRubric(false)} />
       )}
     </>

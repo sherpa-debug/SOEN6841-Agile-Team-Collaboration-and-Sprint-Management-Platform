@@ -47,6 +47,8 @@ To use the app immediately without GitHub credentials, leave `VITE_GITHUB_CLIENT
 - `ALPHA24` — joins Team Alpha
 - `SPRINT1` — joins SprintProof Team
 
+Demo staff codes (read-only over every team, FR7): `TA6841` signs in as a TA and `PROF6841` as an instructor. Staff can open the board, dashboard and task details, but cannot create, edit, move or delete anything. These codes and the role checks in `client/src/lib/access.js` are a browser-side stand-in; the API must repeat the same checks (NFR3).
+
 ### Optional: Enable GitHub OAuth
 
 Create a GitHub OAuth App and set its authorization callback URL to:

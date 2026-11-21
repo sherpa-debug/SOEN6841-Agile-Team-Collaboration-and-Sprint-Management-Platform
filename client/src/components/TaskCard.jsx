@@ -3,7 +3,7 @@ import { MEMBERS } from '../data/sampleData.js'
 import { describeWork } from '../lib/linkedWork.js'
 
 // One task card. Click (or Enter) opens the task; drag moves it to another column.
-export default function TaskCard({ task, criteria, aiCount, workCount, onOpen }) {
+export default function TaskCard({ task, criteria, aiCount, workCount, readOnly, onOpen }) {
   const assignee = MEMBERS.find((m) => m.id === task.assigneeId)
   const tags = criteria.filter((c) => (task.criteria ?? []).includes(c.id))
   const linked = describeWork(workCount)
@@ -25,7 +25,7 @@ export default function TaskCard({ task, criteria, aiCount, workCount, onOpen })
       className="card"
       role="button"
       tabIndex={0}
-      draggable
+      draggable={!readOnly}
       aria-label={`${task.key}: ${task.title}`}
       data-key={task.key}
       onClick={() => onOpen(task.key)}
