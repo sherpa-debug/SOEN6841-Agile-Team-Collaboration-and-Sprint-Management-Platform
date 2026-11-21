@@ -97,6 +97,8 @@ The implementation technology has not yet been finalized. Proposed technologies 
 | Authentication | Role-based team access |
 | Project Management | Agile sprint workflow |
 
+Apply the starter schema to an existing PostgreSQL database from the repository root with `psql -d your_database_name -f server/db/schema.sql`.
+
 ##  Components and Data Flow
 SprintProof is one web app. Students and instructors use it in a browser, and behind it run an API, a contribution engine, a sync job, and a database.
 
