@@ -9,13 +9,17 @@ export default function RubricCoverage({ coverage, onEdit }) {
         <span className="muted">
           {coveredCount} of {coverage.length} criteria have tasks · all sprints
         </span>
-        <button type="button" className="link-button" onClick={onEdit}>
-          Edit rubric
-        </button>
+        {onEdit && (
+          <button type="button" className="link-button" onClick={onEdit}>
+            Edit rubric
+          </button>
+        )}
       </div>
 
       {coverage.length === 0 ? (
-        <p className="muted">No rubric yet. Click “Edit rubric” to enter your course criteria.</p>
+        <p className="muted">
+          {onEdit ? 'No rubric yet. Click “Edit rubric” to enter your course criteria.' : 'No rubric yet.'}
+        </p>
       ) : (
         <ul className="coverage-list">
           {coverage.map(({ criterion, taskKeys, covered }) => (

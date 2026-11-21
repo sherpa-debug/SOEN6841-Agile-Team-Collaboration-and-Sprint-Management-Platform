@@ -2,7 +2,7 @@ import Column from './Column.jsx'
 import { STATUSES } from '../data/sampleData.js'
 
 // The 3 columns: To do, In progress, Done
-export default function Board({ tasks, criteria, aiCounts, workCounts, onOpen, onMove }) {
+export default function Board({ tasks, criteria, aiCounts, workCounts, readOnly, onOpen, onMove }) {
   return (
     <div className="board">
       {STATUSES.map((status) => (
@@ -13,6 +13,7 @@ export default function Board({ tasks, criteria, aiCounts, workCounts, onOpen, o
           criteria={criteria}
           aiCounts={aiCounts}
           workCounts={workCounts}
+          readOnly={readOnly}
           onOpen={onOpen}
           onMove={onMove}
         />

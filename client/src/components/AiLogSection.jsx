@@ -92,7 +92,7 @@ function AiEntryForm({ onSave, onCancel }) {
 }
 
 // The AI log of one task, shown in the task panel
-export default function AiLogSection({ entries, onAdd, onRemove }) {
+export default function AiLogSection({ entries, readOnly = false, onAdd, onRemove }) {
   const [isAdding, setIsAdding] = useState(false)
 
   return (
@@ -101,14 +101,14 @@ export default function AiLogSection({ entries, onAdd, onRemove }) {
         <h3 className="section-label">
           AI log <span className="ai-count">{entries.length}</span>
         </h3>
-        {!isAdding && (
+        {!isAdding && !readOnly && (
           <button type="button" className="link-button" onClick={() => setIsAdding(true)}>
             + Log AI use
           </button>
         )}
       </div>
 
-      {isAdding && (
+      {isAdding && !readOnly && (
         <AiEntryForm
           onSave={(fields) => {
             onAdd(fields)
@@ -129,14 +129,16 @@ export default function AiLogSection({ entries, onAdd, onRemove }) {
                 <p>
                   <strong>{entry.tool}</strong> · {entry.purpose}
                 </p>
-                <button
-                  type="button"
-                  className="icon-button icon-button--small"
-                  onClick={() => onRemove(entry.id)}
-                  aria-label={`Remove AI entry: ${entry.purpose}`}
-                >
-                  ×
-                </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    className="icon-button icon-button--small"
+                    onClick={() => onRemove(entry.id)}
+                    aria-label={`Remove AI entry: ${entry.purpose}`}
+                  >
+                    ×
+                  </button>
+                )}
               </div>
               <p className={`ai-check ${entry.verified ? 'is-ok' : 'is-warn'}`}>
                 {entry.verified ? `Checked: ${entry.check || 'yes'}` : 'Not checked yet'}
