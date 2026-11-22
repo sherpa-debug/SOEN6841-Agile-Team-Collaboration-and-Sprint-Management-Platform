@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { normalizeInviteCode } from '../lib/auth.js'
+import { joinDemoTeam, normalizeInviteCode } from '../lib/auth.js'
 import { apiRequest } from '../lib/api.js'
 
 export default function AuthGate({ session, onSessionChange, initialError = '', onDemo }) {
@@ -21,6 +21,13 @@ export default function AuthGate({ session, onSessionChange, initialError = '', 
     event.preventDefault()
     setIsSubmitting(true)
     setError('')
+    if (session?.demo) {
+      const result = joinDemoTeam(inviteCode, session)
+      if (result.ok) onSessionChange(result.session)
+      else setError(result.error)
+      setIsSubmitting(false)
+      return
+    }
     try {
       const { session: nextSession } = await apiRequest('/api/teams/join', {
         method: 'POST',
@@ -52,6 +59,10 @@ export default function AuthGate({ session, onSessionChange, initialError = '', 
   }
 
   async function handleSignOut() {
+    if (session?.demo) {
+      onSessionChange(null)
+      return
+    }
     try {
       await apiRequest('/api/auth/logout', { method: 'POST' })
       onSessionChange(null)
@@ -93,7 +104,10 @@ export default function AuthGate({ session, onSessionChange, initialError = '', 
             </div>
           </div>
           <h1 id="join-title">Join or create a team</h1>
-          <p>Use an invitation shared by a teammate, or start a new team.</p>
+          <p>{session.demo ? 'Demo mode: enter a team code.' : 'Use an invitation shared by a teammate, or start a new team.'}</p>
+          {session.demo && (
+            <p className="auth-hint">Students: ALPHA24 or SPRINT1. Staff (read-only): TA6841 or PROF6841.</p>
+          )}
           <form className="invite-form" onSubmit={handleJoin}>
             <label htmlFor="invite-code">Invitation code</label>
             <input
@@ -114,27 +128,31 @@ export default function AuthGate({ session, onSessionChange, initialError = '', 
               {isSubmitting ? 'Joining…' : 'Join team'}
             </button>
           </form>
-          <div className="auth-divider"><span>or create a team</span></div>
-          <form className="invite-form" onSubmit={handleCreateTeam}>
-            <label htmlFor="team-name">Team name</label>
-            <input
-              id="team-name"
-              name="teamName"
-              className="team-name-input"
-              value={teamName}
-              onChange={(event) => {
-                setTeamName(event.target.value)
-                setError('')
-              }}
-              minLength={2}
-              maxLength={60}
-              placeholder="e.g. Product team"
-              required
-            />
-            <button type="submit" className="primary-button" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating…' : 'Create team'}
-            </button>
-          </form>
+          {!session.demo && (
+            <>
+              <div className="auth-divider"><span>or create a team</span></div>
+              <form className="invite-form" onSubmit={handleCreateTeam}>
+                <label htmlFor="team-name">Team name</label>
+                <input
+                  id="team-name"
+                  name="teamName"
+                  className="team-name-input"
+                  value={teamName}
+                  onChange={(event) => {
+                    setTeamName(event.target.value)
+                    setError('')
+                  }}
+                  minLength={2}
+                  maxLength={60}
+                  placeholder="e.g. Product team"
+                  required
+                />
+                <button type="submit" className="primary-button" disabled={isSubmitting}>
+                  {isSubmitting ? 'Creating…' : 'Create team'}
+                </button>
+              </form>
+            </>
+          )}
           <button type="button" className="link-button auth-signout" onClick={handleSignOut}>
             Sign out
           </button>

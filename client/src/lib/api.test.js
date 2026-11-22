@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { apiRequest } from './api.js'
-import { DEMO_SESSION } from './auth.js'
+import { DEMO_SESSION, joinDemoTeam } from './auth.js'
 import { authorize, hasSecrets } from './access.js'
 
 afterEach(() => vi.unstubAllGlobals())
@@ -24,11 +24,32 @@ describe('apiRequest when no API is running', () => {
   })
 })
 
-describe('demo session', () => {
-  it('is a student of the SprintProof team only, with no token', () => {
-    expect(DEMO_SESSION).toMatchObject({ role: 'student', demo: true, team: { id: 'sprintproof' } })
-    expect(authorize(DEMO_SESSION, { action: 'update', teamId: 'sprintproof' }).ok).toBe(true)
-    expect(authorize(DEMO_SESSION, { action: 'read', teamId: 'alpha24' })).toMatchObject({ ok: false, status: 403 })
+describe('demo mode', () => {
+  it('starts as a signed-in user with no team and no token', () => {
+    expect(DEMO_SESSION).toMatchObject({ githubId: 'demo', demo: true })
+    expect(DEMO_SESSION.team).toBeUndefined()
     expect(hasSecrets(DEMO_SESSION)).toBe(false)
+  })
+
+  it('makes a student of the team for a team code, reaching only that team', () => {
+    const { ok, session } = joinDemoTeam('alpha-24', DEMO_SESSION)
+    expect(ok).toBe(true)
+    expect(session).toMatchObject({ role: 'student', demo: true, team: { id: 'alpha24', name: 'Team Alpha' } })
+    expect(authorize(session, { action: 'update', teamId: 'alpha24' }).ok).toBe(true)
+    expect(authorize(session, { action: 'read', teamId: 'sprint1' })).toMatchObject({ ok: false, status: 403 })
+  })
+
+  it('gives staff codes a read-only role over every team', () => {
+    for (const [code, role] of [['TA6841', 'ta'], ['PROF6841', 'instructor']]) {
+      const { session } = joinDemoTeam(code, DEMO_SESSION)
+      expect(session.role).toBe(role)
+      expect(authorize(session, { action: 'read', teamId: 'alpha24' })).toEqual({ ok: true })
+      expect(authorize(session, { action: 'update', teamId: 'alpha24' })).toMatchObject({ ok: false, status: 403 })
+    }
+  })
+
+  it('refuses a made-up code, and a join with no sign-in', () => {
+    expect(joinDemoTeam('NOPE', DEMO_SESSION)).toEqual({ ok: false, error: 'Invalid or expired invite code.' })
+    expect(joinDemoTeam('ALPHA24', null)).toEqual({ ok: false, error: 'Sign in with GitHub before joining a team.' })
   })
 })
