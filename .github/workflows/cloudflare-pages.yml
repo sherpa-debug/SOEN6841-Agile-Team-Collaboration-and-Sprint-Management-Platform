@@ -1,0 +1,37 @@
+# SP-5: publish the front end to Cloudflare Pages on every push to main, so the live link keeps
+# showing our changes even when Netlify production deploys are paused. Cloudflare Pages is free
+# and works with a private repository. There is no API there, so the sign-in screen offers the
+# demo data (SP-3).
+name: Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: cloudflare-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - name: Build
+        working-directory: client
+        run: |
+          npm ci
+          npm run build
+      - name: Create the Pages project (does nothing if it exists)
+        run: npx --yes wrangler@3 pages project create sprintproof --production-branch=main || true
+      - name: Deploy to Cloudflare Pages
+        run: npx --yes wrangler@3 pages deploy client/dist --project-name=sprintproof --branch=main --commit-dirty=true
