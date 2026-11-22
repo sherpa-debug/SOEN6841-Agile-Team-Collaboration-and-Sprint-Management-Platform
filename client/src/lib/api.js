@@ -10,8 +10,11 @@ export async function apiRequest(path, { method = 'GET', body } = {}) {
   try {
     data = await response.json()
   } catch {
-    throw new Error('The server returned an invalid response.')
+    // An HTML page instead of JSON means no API is running behind this address
+    const error = new Error('The sign-in server is not available right now.')
+    error.code = 'NO_API'
+    throw error
   }
-   if (!response.ok) throw new Error(data.error || 'The request could not be completed.')
+  if (!response.ok) throw new Error(data.error || 'The request could not be completed.')
   return data
 }
