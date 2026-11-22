@@ -1,14 +1,24 @@
-# SP-5: Netlify builds and deploys every push to main.
 [build]
-  base = "client"
-  command = "npm ci && npm test && npm run build"
-  publish = "dist"
+command = "npm ci --prefix client && npm ci --prefix server && npm test --prefix client && npm test --prefix server && npm run build --prefix client"
+publish = "client/dist"
 
 [build.environment]
-  NODE_VERSION = "22"
+NODE_VERSION = "22"
 
-# Single-page app: serve index.html for routes such as /auth/callback
+[functions]
+directory = "server/netlify/functions"
+node_bundler = "esbuild"
+external_node_modules = ["express"]
+
+# API requests must be handled before the SPA fallback.
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+from = "/api/*"
+to = "/.netlify/functions/api/:splat"
+status = 200
+force = true
+
+# Frontend SPA fallback.
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200

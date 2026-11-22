@@ -52,7 +52,7 @@ before(async () => {
   app.use(express.json())
   app.use('/api', createAuthRouter({
     pool: {},
-    env: { SESSION_SECRET: secret, GITHUB_CLIENT_ID: 'test-client-id' },
+    env: { SESSION_SECRET: secret, OAUTH_CLIENT_ID: 'test-client-id' },
   }))
   server = app.listen(0)
   await new Promise((resolve) => server.once('listening', resolve))

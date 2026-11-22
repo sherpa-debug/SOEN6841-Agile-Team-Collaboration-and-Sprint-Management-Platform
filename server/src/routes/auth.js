@@ -91,7 +91,7 @@ export function createAuthRouter({
   })
 
   router.get('/auth/github', (request, response) => {
-    const clientId = env.GITHUB_CLIENT_ID
+    const clientId = env.OAUTH_CLIENT_ID
     const sessionSecret = env.SESSION_SECRET
     if (!clientId || !sessionSecret || sessionSecret.length < 32) {
       return sendError(response, 503, 'GitHub sign-in is not configured on the server.')
@@ -127,8 +127,8 @@ export function createAuthRouter({
       return redirectError()
     }
 
-    const clientId = env.GITHUB_CLIENT_ID
-    const clientSecret = env.GITHUB_CLIENT_SECRET
+    const clientId = env.OAUTH_CLIENT_ID
+    const clientSecret = env.OAUTH_CLIENT_SECRET
     const code = request.query.code
     if (!clientId || !clientSecret || typeof code !== 'string') {
       response.setHeader('Set-Cookie', clearOAuthCookie)

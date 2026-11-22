@@ -11,16 +11,15 @@ import {
   visibleTeams,
 } from './access.js'
 
-// Sessions as the server now issues them after sign-in (SP-3); the role comes from the server
-const base = { githubId: '7', login: 'octocat', name: 'Octo', avatarUrl: null }
+const base = { githubId: '7', login: 'octocat', name: 'Octo' }
 const alphaStudent = { ...base, role: 'student', team: { id: 'alpha24', name: 'Team Alpha' } }
-const sprintStudent = { ...base, role: 'student', team: { id: 'sprint1', name: 'SprintProof Team' } }
+const sprintStudent = { ...base, role: 'student', team: { id: 'sprint1', name: 'Sprint Team' } }
 const ta = { ...base, role: 'ta', team: { id: ALL_TEAMS, name: 'All teams' } }
 const instructor = { ...base, role: 'instructor', team: { id: ALL_TEAMS, name: 'All teams' } }
 
 const WRITES = ['create', 'update', 'delete']
 
-describe('roles', () => {
+describe('session roles', () => {
   it('treats a session without a role as a student', () => {
     expect(roleOf({ githubId: '1' })).toBe('student')
     expect(isStaff(ta)).toBe(true)
@@ -89,7 +88,7 @@ describe('T7: TAs and instructors can only read', () => {
   })
 })
 
-describe('T12: tokens are found and removed from anything the browser would keep', () => {
+describe('secret fields are stripped from client data', () => {
   const leaky = { ...base, access_token: 'gho_secret', nested: { refreshToken: 'x', clientSecret: 'y', keep: 1 } }
 
   it('finds and removes secret-looking fields at any depth', () => {
@@ -99,7 +98,7 @@ describe('T12: tokens are found and removed from anything the browser would keep
     expect(stripSecrets([{ token: 1, ok: 2 }])).toEqual([{ ok: 2 }])
   })
 
-  it('has no token in any of the sessions used here', () => {
-    for (const session of [alphaStudent, sprintStudent, ta, instructor]) expect(hasSecrets(session)).toBe(false)
+  it('does not preserve token fields when reducing a profile to client data', () => {
+    expect(stripSecrets({ ...base, access_token: 'gho_secret' })).toEqual(base)
   })
 })
