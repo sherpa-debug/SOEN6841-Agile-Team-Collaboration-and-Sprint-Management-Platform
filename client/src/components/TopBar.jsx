@@ -1,9 +1,9 @@
 import Avatar from './Avatar.jsx'
 import Logo from './Logo.jsx'
-import { CURRENT_USER_ID, MEMBERS, SPRINTS, TEAM } from '../data/sampleData.js'
+import { SPRINTS } from '../data/sampleData.js'
 
-export default function TopBar({ view, sprintId, readOnly = false, role, onSprintChange, onSignOut }) {
-  const me = MEMBERS.find((m) => m.id === CURRENT_USER_ID)
+export default function TopBar({ view, sprintId, session, readOnly = false, role, onSprintChange, onSignOut, onInvite }) {
+  const me = { id: 1, name: session.name, avatarUrl: session.avatarUrl }
 
   function handleChange(event) {
     const value = event.target.value
@@ -14,7 +14,7 @@ export default function TopBar({ view, sprintId, readOnly = false, role, onSprin
     <header className="topbar">
       <div className="topbar-brand">
         <Logo />
-        <span className="team-chip">{TEAM.name}</span>
+        <span className="team-chip">{session.team.name}</span>
         {readOnly && <span className="team-chip">{role === 'instructor' ? 'Instructor' : 'TA'} · read-only</span>}
       </div>
 
@@ -55,6 +55,7 @@ export default function TopBar({ view, sprintId, readOnly = false, role, onSprin
           <option value="backlog">Backlog</option>
         </select>
         <Avatar member={me} light />
+        {!readOnly && <button type="button" className="topbar-invite" onClick={onInvite}>Invite</button>}
         {onSignOut && (
           <button type="button" className="topbar-signout" onClick={onSignOut}>
             Sign out

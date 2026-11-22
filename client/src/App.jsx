@@ -8,6 +8,7 @@ import NewTaskDialog from './components/NewTaskDialog.jsx'
 import RubricDialog from './components/RubricDialog.jsx'
 import Dashboard from './components/Dashboard.jsx'
 import AuthGate from './components/AuthGate.jsx'
+import TeamInviteDialog from './components/TeamInviteDialog.jsx'
 import CheckIn from './components/CheckIn.jsx'
 import DrillDown from './components/DrillDown.jsx'
 import { CURRENT_USER_ID, MEMBERS, SAMPLE_AI_LOG, SAMPLE_CRITERIA, SAMPLE_TASKS, SPRINTS } from './data/sampleData.js'
@@ -15,7 +16,7 @@ import { SAMPLE_COMMITS, SAMPLE_PULL_REQUESTS } from './data/sampleWork.js'
 import { linkWork } from './lib/contribution.js'
 import { unlinkedInSprint, workCountsByTask, workForTask } from './lib/linkedWork.js'
 import { createTask, loadTasks, nextKey, saveTasks, updateTask } from './lib/tasks.js'
-import { loadSession, saveSession } from './lib/auth.js'
+import { apiRequest } from './lib/api.js'
 import { authorize } from './lib/access.js'
 import {
   cleanCriteria,
@@ -43,7 +44,14 @@ function formatDay(isoDate) {
 }
 
 export default function App() {
-  const [session, setSession] = useState(() => loadSession())
+  const [session, setSession] = useState(null)
+  const [sessionLoaded, setSessionLoaded] = useState(false)
+  const [authError, setAuthError] = useState(() => (
+    new URLSearchParams(window.location.search).has('authError')
+      ? 'GitHub sign-in was cancelled or could not be completed.'
+      : ''
+  ))
+  const [isInviteOpen, setIsInviteOpen] = useState(false)
   const [tasks, setTasks] = useState(() => loadTasks(SAMPLE_TASKS))
   const [criteria, setCriteria] = useState(() => loadCriteria(SAMPLE_CRITERIA))
   const [aiLog, setAiLog] = useState(() => loadAiLog(SAMPLE_AI_LOG))
@@ -54,6 +62,23 @@ export default function App() {
   const [isEditingRubric, setIsEditingRubric] = useState(false) // "Edit rubric" dialog open?
   const [showUnlinked, setShowUnlinked] = useState(false) // "Unlinked work" list open?
   const [view, setView] = useState(viewFromHash) // 'board', 'dashboard' or 'checkin'
+
+  useEffect(() => {
+    let active = true
+    apiRequest('/api/auth/session')
+      .then(({ session: currentSession }) => {
+        if (active) setSession(currentSession)
+      })
+      .catch((error) => {
+        if (active) setAuthError(error.message)
+      })
+      .finally(() => {
+        if (active) setSessionLoaded(true)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   // Follow the Board / Dashboard / Check-in links (and the browser's back button)
   useEffect(() => {
@@ -150,11 +175,25 @@ export default function App() {
   }
 
   function handleSessionChange(nextSession) {
-    setSession(saveSession(nextSession))
+    setSession(nextSession)
+    setAuthError('')
+  }
+
+  async function handleSignOut() {
+    try {
+      await apiRequest('/api/auth/logout', { method: 'POST' })
+      handleSessionChange(null)
+    } catch (error) {
+      setAuthError(error.message)
+    }
+  }
+
+  if (!sessionLoaded) {
+    return <main className="auth-page" aria-busy="true"><div className="auth-card">Loading your session…</div></main>
   }
 
   if (!session || !session.team) {
-    return <AuthGate session={session} onSessionChange={handleSessionChange} />
+    return <AuthGate session={session} onSessionChange={handleSessionChange} initialError={authError} />
   }
 
   return (
@@ -162,10 +201,12 @@ export default function App() {
       <TopBar
         view={view}
         sprintId={sprintId}
+        session={session}
         readOnly={readOnly}
         role={session.role}
         onSprintChange={handleSprintChange}
-        onSignOut={() => handleSessionChange(null)}
+        onSignOut={handleSignOut}
+        onInvite={() => setIsInviteOpen(true)}
       />
 
       {view === 'dashboard' ? (
@@ -271,6 +312,9 @@ export default function App() {
 
       {isEditingRubric && !readOnly && (
         <RubricDialog criteria={criteria} onSave={handleSaveRubric} onCancel={() => setIsEditingRubric(false)} />
+      )}
+      {isInviteOpen && !readOnly && (
+        <TeamInviteDialog teamName={session.team.name} onClose={() => setIsInviteOpen(false)} />
       )}
     </>
   )

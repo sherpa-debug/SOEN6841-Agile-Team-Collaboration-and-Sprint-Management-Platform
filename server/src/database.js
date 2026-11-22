@@ -13,6 +13,13 @@ export async function checkDatabase() {
   await pool.query('SELECT 1')
 }
 
+export function getDatabasePool() {
+  if (!pool) {
+    throw new Error('DATABASE_URL is not configured')
+  }
+  return pool
+}
+
 // Run one parameterised statement and return its rows
 export async function query(sql, params = []) {
   if (!pool) {

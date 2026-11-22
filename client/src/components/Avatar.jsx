@@ -13,7 +13,7 @@ export default function Avatar({ member, light = false }) {
   const style = light ? undefined : { background: COLORS[(member.id - 1) % COLORS.length] }
   return (
     <span className={`avatar${light ? ' avatar--light' : ''}`} style={style} title={member.name}>
-      {initials}
+      {member.avatarUrl ? <img src={member.avatarUrl} alt="" /> : initials}
     </span>
   )
 }

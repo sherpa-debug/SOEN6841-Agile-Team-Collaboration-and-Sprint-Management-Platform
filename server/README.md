@@ -8,12 +8,11 @@ From the `server` directory:
 
 ```bash
 npm ci
-$env:DATABASE_URL="postgres://user:password@localhost:5432/sprintproof"
+cp .env.example .env
 npm run dev
 ```
 
-Set `CLIENT_ORIGIN` to the frontend origin if it differs from `http://localhost:5173`. The server listens on port `3000` by default; set `PORT` to change it.
-
+Create a [GitHub OAuth App](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app] with) callback `http://localhost:5173/api/auth/callback`. Set `DATABASE_URL`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `APP_ORIGIN`, and a random `SESSION_SECRET` of at least 32 characters in `.env`. Keep OAuth credentials and the session key on the server. `APP_ORIGIN` determines the callback URL and allowed write-request origin. The server listens on port `3000` by default; set `PORT` to change it.
 Apply the initial database schema from the repository root with:
 
 ```bash
@@ -24,8 +23,13 @@ Available initial endpoints:
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/` | API landing response |
-| GET | `/api` | API name and endpoint listing |
+| GET | `/api/auth/github` | Begin GitHub OAuth |
+| GET | `/api/auth/callback` | Verify OAuth state, exchange the code, and set a signed session cookie |
+| GET | `/api/auth/session` | Return the authenticated profile and team |
+| POST | `/api/auth/logout` | Clear the session cookie |
+| POST | `/api/teams` | Create a team and join its creator |
+| POST | `/api/teams/invites` | Create a seven-day team invitation |
+| POST | `/api/teams/join` | Join a team using an invitation code |
 | GET | `/api/health` | Liveness check |
 | GET | `/api/health/database` | PostgreSQL readiness check |
 
