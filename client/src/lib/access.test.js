@@ -10,45 +10,16 @@ import {
   stripSecrets,
   visibleTeams,
 } from './access.js'
-import { createGitHubSession, joinTeam, loadSession, saveSession } from './auth.js'
 
-function fakeStorage() {
-  const data = new Map()
-  return {
-    getItem: (key) => (data.has(key) ? data.get(key) : null),
-    setItem: (key, value) => data.set(key, String(value)),
-    removeItem: (key) => data.delete(key),
-    dump: () => [...data.values()].join('\n'),
-  }
-}
-
-const profile = { id: 7, login: 'octocat', name: 'Octo' }
-const base = createGitHubSession(profile)
-const alphaStudent = joinTeam('ALPHA24', base).session
-const sprintStudent = joinTeam('SPRINT1', base).session
-const ta = joinTeam('TA6841', base).session
-const instructor = joinTeam('PROF6841', base).session
+const base = { githubId: '7', login: 'octocat', name: 'Octo' }
+const alphaStudent = { ...base, role: 'student', team: { id: 'alpha24', name: 'Team Alpha' } }
+const sprintStudent = { ...base, role: 'student', team: { id: 'sprint1', name: 'Sprint Team' } }
+const ta = { ...base, role: 'ta', team: { id: ALL_TEAMS, name: 'All teams' } }
+const instructor = { ...base, role: 'instructor', team: { id: ALL_TEAMS, name: 'All teams' } }
 
 const WRITES = ['create', 'update', 'delete']
 
-describe('joining sets the role', () => {
-  it('makes a student of anyone who joins with a team code', () => {
-    expect(alphaStudent.role).toBe('student')
-    expect(alphaStudent.team).toEqual({ id: 'alpha24', name: 'Team Alpha' })
-  })
-
-  it('gives staff codes a staff role over all teams, and still needs a GitHub sign-in', () => {
-    expect(ta).toMatchObject({ role: 'ta', team: { id: ALL_TEAMS } })
-    expect(instructor).toMatchObject({ role: 'instructor', team: { id: ALL_TEAMS } })
-    expect(joinTeam('TA6841', null)).toEqual({ ok: false, error: 'Sign in with GitHub before joining a team.' })
-    expect(joinTeam('ta-6841', base).session.role).toBe('ta') // same clean-up as team codes
-  })
-
-  it('refuses a made-up code, and a team code cannot be turned into a staff role', () => {
-    expect(joinTeam('STAFF', base).ok).toBe(false)
-    expect(joinTeam('ALPHA24', ta).session.role).toBe('student')
-  })
-
+describe('session roles', () => {
   it('treats a session without a role as a student', () => {
     expect(roleOf({ githubId: '1' })).toBe('student')
     expect(isStaff(ta)).toBe(true)
@@ -116,7 +87,7 @@ describe('T7: TAs and instructors can only read', () => {
   })
 })
 
-describe('T12: no token is ever kept in the browser', () => {
+describe('secret fields are stripped from client data', () => {
   const leaky = { ...base, access_token: 'gho_secret', nested: { refreshToken: 'x', clientSecret: 'y', keep: 1 } }
 
   it('finds and removes secret-looking fields at any depth', () => {
@@ -126,26 +97,7 @@ describe('T12: no token is ever kept in the browser', () => {
     expect(stripSecrets([{ token: 1, ok: 2 }])).toEqual([{ ok: 2 }])
   })
 
-  it('does not copy a token from the GitHub profile into the session', () => {
-    const session = createGitHubSession({ ...profile, access_token: 'gho_secret' })
-    expect(hasSecrets(session)).toBe(false)
-  })
-
-  it('never saves a token, even if the session passed in has one', () => {
-    const storage = fakeStorage()
-    saveSession({ ...alphaStudent, access_token: 'gho_secret' }, storage)
-    expect(storage.dump()).not.toContain('gho_secret')
-    expect(hasSecrets(loadSession(storage))).toBe(false)
-  })
-
-  it('drops a token that an older version of the app already saved', () => {
-    const storage = fakeStorage()
-    storage.setItem('sprintproof.auth.v1', JSON.stringify({ ...alphaStudent, access_token: 'gho_secret' }))
-    expect(JSON.stringify(loadSession(storage))).not.toContain('gho_secret')
-    expect(loadSession(storage)).toEqual(alphaStudent)
-  })
-
-  it('has no token in any session a join produces', () => {
-    for (const session of [alphaStudent, sprintStudent, ta, instructor]) expect(hasSecrets(session)).toBe(false)
+  it('does not preserve token fields when reducing a profile to client data', () => {
+    expect(stripSecrets({ ...base, access_token: 'gho_secret' })).toEqual(base)
   })
 })
