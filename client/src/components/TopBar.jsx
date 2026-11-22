@@ -55,7 +55,7 @@ export default function TopBar({ view, sprintId, session, readOnly = false, role
           <option value="backlog">Backlog</option>
         </select>
         <Avatar member={me} light />
-        {!readOnly && <button type="button" className="topbar-invite" onClick={onInvite}>Invite</button>}
+        {!readOnly && onInvite && <button type="button" className="topbar-invite" onClick={onInvite}>Invite</button>}
         {onSignOut && (
           <button type="button" className="topbar-signout" onClick={onSignOut}>
             Sign out

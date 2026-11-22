@@ -18,6 +18,7 @@ import { unlinkedInSprint, workCountsByTask, workForTask } from './lib/linkedWor
 import { createTask, loadTasks, nextKey, saveTasks, updateTask } from './lib/tasks.js'
 import { apiRequest } from './lib/api.js'
 import { authorize } from './lib/access.js'
+import { DEMO_SESSION } from './lib/auth.js'
 import {
   cleanCriteria,
   loadCriteria,
@@ -46,6 +47,7 @@ function formatDay(isoDate) {
 export default function App() {
   const [session, setSession] = useState(null)
   const [sessionLoaded, setSessionLoaded] = useState(false)
+  const [apiAvailable, setApiAvailable] = useState(true)
   const [authError, setAuthError] = useState(() => (
     new URLSearchParams(window.location.search).has('authError')
       ? 'GitHub sign-in was cancelled or could not be completed.'
@@ -70,7 +72,9 @@ export default function App() {
         if (active) setSession(currentSession)
       })
       .catch((error) => {
-        if (active) setAuthError(error.message)
+        if (!active) return
+        if (error.code === 'NO_API') setApiAvailable(false)
+        else setAuthError(error.message)
       })
       .finally(() => {
         if (active) setSessionLoaded(true)
@@ -180,6 +184,10 @@ export default function App() {
   }
 
   async function handleSignOut() {
+    if (session?.demo) {
+      handleSessionChange(null)
+      return
+    }
     try {
       await apiRequest('/api/auth/logout', { method: 'POST' })
       handleSessionChange(null)
@@ -193,7 +201,12 @@ export default function App() {
   }
 
   if (!session || !session.team) {
-    return <AuthGate session={session} onSessionChange={handleSessionChange} initialError={authError} />
+    return <AuthGate
+        session={session}
+        onSessionChange={handleSessionChange}
+        initialError={authError}
+        onDemo={apiAvailable ? undefined : () => handleSessionChange(DEMO_SESSION)}
+      />
   }
 
   return (
@@ -206,7 +219,7 @@ export default function App() {
         role={session.role}
         onSprintChange={handleSprintChange}
         onSignOut={handleSignOut}
-        onInvite={() => setIsInviteOpen(true)}
+        onInvite={session.demo ? undefined : () => setIsInviteOpen(true)}
       />
 
       {view === 'dashboard' ? (
