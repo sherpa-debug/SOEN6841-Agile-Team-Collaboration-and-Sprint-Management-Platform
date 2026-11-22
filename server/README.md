@@ -12,7 +12,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Create a [GitHub OAuth App](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app] with) callback `http://localhost:5173/api/auth/callback`. Set `DATABASE_URL`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `APP_ORIGIN`, and a random `SESSION_SECRET` of at least 32 characters in `.env`. Keep OAuth credentials and the session key on the server. `APP_ORIGIN` determines the callback URL and allowed write-request origin. The server listens on port `3000` by default; set `PORT` to change it.
+Create a [GitHub OAuth App](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app) with callback `http://localhost:5173/api/auth/callback`. Set `DATABASE_URL`, `OAUTH_CLIENT_ID`, `OAUTH_CLIENT_SECRET`, `APP_ORIGIN`, and a random `SESSION_SECRET` of at least 32 characters in `.env`. Keep OAuth credentials and the session key on the server. `APP_ORIGIN` determines the callback URL and allowed write-request origin. The server listens on port `3000` by default; set `PORT` to change it.
 Apply the initial database schema from the repository root with:
 
 ```bash
