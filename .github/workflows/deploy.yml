@@ -27,14 +27,15 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: client/package-lock.json
-      - name: Install, test and build
-        working-directory: client
-        env:
-          # Optional repository variable; without it the deployed app runs in demo mode.
-          VITE_GITHUB_CLIENT_ID: ${{ vars.VITE_GITHUB_CLIENT_ID }}
+      - name: Install dependencies
         run: |
-          npm install --no-audit --no-fund
-          npm test
-          npm run build
+          npm ci --prefix client
+          npm ci --prefix server
+      - name: Test
+        run: |
+          npm test --prefix client
+          npm test --prefix server
+      - name: Build client
+        run: npm run build --prefix client
       - name: Deploy to Netlify (production)
-        run: npx --yes netlify-cli@latest deploy --prod --no-build --dir=client/dist --site "$NETLIFY_SITE_ID" --message "Deploy ${GITHUB_SHA::7} from GitHub Actions"
+        run: npx --yes netlify-cli@latest deploy --prod --site "$NETLIFY_SITE_ID" --message "Deploy ${GITHUB_SHA::7} from GitHub Actions"
