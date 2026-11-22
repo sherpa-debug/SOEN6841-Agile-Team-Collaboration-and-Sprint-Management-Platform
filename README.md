@@ -49,6 +49,10 @@ To use the app immediately without GitHub credentials, leave `VITE_GITHUB_CLIENT
 
 Demo staff codes (read-only over every team, FR7): `TA6841` signs in as a TA and `PROF6841` as an instructor. Staff can open the board, dashboard and task details, but cannot create, edit, move or delete anything. These codes and the role checks in `client/src/lib/access.js` are a browser-side stand-in; the API must repeat the same checks (NFR3).
 
+### Start the API
+
+In another terminal, run the backend from `server/` using the setup steps in [`server/README.md`](server/README.md). The API currently provides health checks only; resource endpoints and server-side authorization are still to be implemented.
+
 ### Optional: Enable GitHub OAuth
 
 Create a GitHub OAuth App and set its authorization callback URL to:
@@ -87,14 +91,14 @@ Run these commands from the `client` directory:
 
 ## Technology Stack
 
-The implementation technology has not yet been finalized. Proposed technologies will be documented after the project feasibility and architectural decisions are completed.
+The frontend uses React and Vite. The backend has an Express API skeleton and a PostgreSQL starter schema; resource endpoints and server-side authorization remain to be implemented.
 
-| Area | Proposed Direction |
+| Area | Status |
 |---|---|
-| Frontend | Web-based responsive interface |
-| Backend | REST-based application services |
-| Database | Relational database |
-| Authentication | Role-based team access |
+| Frontend | React + Vite responsive web app |
+| Backend | Express REST API skeleton |
+| Database | PostgreSQL (`server/db/schema.sql`) |
+| Authentication | GitHub sign-in; API authorization pending |
 | Project Management | Agile sprint workflow |
 
 Apply the starter schema to an existing PostgreSQL database from the repository root with `psql -d your_database_name -f server/db/schema.sql`.
