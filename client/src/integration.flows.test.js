@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { MEMBERS, SAMPLE_AI_LOG, SAMPLE_CRITERIA, SAMPLE_TASKS, SPRINTS } from './data/sampleData.js'
 import { SAMPLE_COMMITS, SAMPLE_PULL_REQUESTS } from './data/sampleWork.js'
 import { addAiEntry, aiCountByMember, aiCountByTask } from './lib/aiLog.js'
-import { createGitHubSession, joinTeam, loadSession, saveSession } from './lib/auth.js'
 import { checkinState, myEntries, saveCheckinForm } from './lib/checkin.js'
 import { LATE_FLAG_AT, linkWork, memberMeasures, sprintSummary } from './lib/contribution.js'
 import { describeWork, unlinkedInSprint, workCountsByTask, workForTask } from './lib/linkedWork.js'
@@ -35,41 +34,6 @@ const measuresFor = (member, { tasks = SAMPLE_TASKS, work, aiLog = SAMPLE_AI_LOG
     aiLog,
     checkins,
   })
-
-describe('sign in, join a team and keep the session', () => {
-  const profile = { id: 259220713, login: 'sherpa-debug', name: 'Anusha', avatar_url: 'https://example.test/a.png' }
-
-  it('signs in with GitHub, joins with a messy invite code and survives a reload', () => {
-    const storage = fakeStorage()
-    const signedIn = createGitHubSession(profile)
-    expect(signedIn).toMatchObject({ githubId: '259220713', login: 'sherpa-debug', name: 'Anusha' })
-
-    const joined = joinTeam(' alpha-24 ', signedIn)
-    expect(joined.ok).toBe(true)
-    expect(joined.session.team).toEqual({ id: 'alpha24', name: 'Team Alpha' })
-
-    saveSession(joined.session, storage)
-    expect(loadSession(storage)).toEqual(joined.session)
-  })
-
-  it('refuses a wrong code and refuses to join before signing in', () => {
-    const signedIn = createGitHubSession(profile)
-    expect(joinTeam('NOPE', signedIn)).toEqual({ ok: false, error: 'Invalid or expired invite code.' })
-    expect(joinTeam('ALPHA24', null).ok).toBe(false)
-    expect(joinTeam('ALPHA24', {}).error).toBe('Sign in with GitHub before joining a team.')
-  })
-
-  it('signing out clears the saved session', () => {
-    const storage = fakeStorage()
-    saveSession(createGitHubSession(profile), storage)
-    saveSession(null, storage)
-    expect(loadSession(storage)).toBeNull()
-  })
-
-  it('does not create a session from an incomplete GitHub profile', () => {
-    expect(() => createGitHubSession({ login: 'no-id' })).toThrow()
-  })
-})
 
 describe('task lifecycle: create, update, save, reload, dashboard', () => {
   it('keeps a new task and its changes after a reload, and the key never changes', () => {

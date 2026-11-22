@@ -35,7 +35,17 @@ test('GET /api reports the API name and health endpoint', async () => {
   assert.deepEqual(await response.json(), {
     name: 'SprintProof API',
     version: '0.1.0',
-    endpoints: ['/api/health', '/api/health/database'],
+    endpoints: [
+      '/api/health',
+      '/api/health/database',
+      '/api/auth/github',
+      '/api/auth/callback',
+      '/api/auth/session',
+      '/api/auth/logout',
+      '/api/teams',
+      '/api/teams/invites',
+      '/api/teams/join',
+    ],
   })
 })
 
