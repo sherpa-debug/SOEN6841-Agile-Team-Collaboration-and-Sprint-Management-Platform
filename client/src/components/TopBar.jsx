@@ -2,7 +2,7 @@ import Avatar from './Avatar.jsx'
 import Logo from './Logo.jsx'
 import { CURRENT_USER_ID, MEMBERS, SPRINTS, TEAM } from '../data/sampleData.js'
 
-export default function TopBar({ view, sprintId, onSprintChange, onSignOut }) {
+export default function TopBar({ view, sprintId, readOnly = false, role, onSprintChange, onSignOut }) {
   const me = MEMBERS.find((m) => m.id === CURRENT_USER_ID)
 
   function handleChange(event) {
@@ -15,6 +15,7 @@ export default function TopBar({ view, sprintId, onSprintChange, onSignOut }) {
       <div className="topbar-brand">
         <Logo />
         <span className="team-chip">{TEAM.name}</span>
+        {readOnly && <span className="team-chip">{role === 'instructor' ? 'Instructor' : 'TA'} · read-only</span>}
       </div>
 
       <nav className="topbar-nav" aria-label="Main">

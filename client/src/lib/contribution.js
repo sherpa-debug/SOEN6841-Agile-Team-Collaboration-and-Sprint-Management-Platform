@@ -3,14 +3,30 @@
 // until its API is ready: the screen will then read the same shape from the API.
 import { peerRating } from './checkin.js'
 
-const KEY_PATTERN = /\bSP-(\d+)\b/i
+// "SP-12" in a message, title or branch name. (?!\d) instead of a closing \b so that
+// "tanzir/SP-12_chart" still matches: "_" counts as a word character and would break \b.
+const keyPattern = () => /\bSP-(\d+)(?!\d)/gi
 export const LATE_WINDOW = 0.2 // the last 20% of the sprint
 export const LATE_FLAG_AT = 0.5 // flag a member when half or more of their activity is late
 
+// Every key in a text, in order: "SP-3 and sp-5" -> ["SP-3", "SP-5"]
+export function findKeys(text) {
+  return [...String(text ?? '').matchAll(keyPattern())].map((m) => `SP-${m[1]}`)
+}
+
 // "SP-12 add chart" -> "SP-12" (or null when there is no key)
 export function findKey(text) {
-  const match = KEY_PATTERN.exec(text ?? '')
-  return match ? `SP-${match[1]}` : null
+  return findKeys(text)[0] ?? null
+}
+
+// First key, over the texts in order, that belongs to a real task (or null).
+// An unknown key (SP-99) does not stop the search: the next text may carry a known one.
+export function resolveKey(texts, knownKeys) {
+  for (const text of texts) {
+    const hit = findKeys(text).find((key) => knownKeys.has(key))
+    if (hit) return hit
+  }
+  return null
 }
 
 // Sprint start, end, and the moment the "last 20%" begins
@@ -28,17 +44,35 @@ function inWindow(date, window) {
 
 const sumPoints = (tasks) => tasks.reduce((sum, t) => sum + (t.points ?? 0), 0)
 
-// Commits and PRs become work items, linked to a task by the key in their message or title
+// Commits and PRs become work items, linked to a task by a key (FR4, T4).
+// Where the key is looked for, in order (the first key that belongs to a real task wins):
+//   PR:     branch name, then title
+//   commit: its own message, then the PR it belongs to (prNumber: that PR's branch and
+//           title), then its own branch name
+// `branch` and `prNumber` are optional, so data without them (the sample data) links
+// exactly as before. A commit with no known key anywhere stays in "unlinked work".
 export function linkWork(commits, pullRequests, tasks) {
   const keys = new Set(tasks.map((t) => t.key))
+  const prTexts = new Map(pullRequests.map((p) => [p.number, [p.branch, p.title]]))
   const items = [
-    ...commits.map((c) => ({ kind: 'commit', id: c.sha.slice(0, 7), label: c.message, authorId: c.authorId, date: c.date })),
-    ...pullRequests.map((p) => ({ kind: 'pr', id: `#${p.number}`, label: p.title, authorId: p.authorId, date: p.date })),
+    ...commits.map((c) => ({
+      kind: 'commit',
+      id: c.sha.slice(0, 7),
+      label: c.message,
+      authorId: c.authorId,
+      date: c.date,
+      texts: [c.message, ...(prTexts.get(c.prNumber) ?? []), c.branch],
+    })),
+    ...pullRequests.map((p) => ({
+      kind: 'pr',
+      id: `#${p.number}`,
+      label: p.title,
+      authorId: p.authorId,
+      date: p.date,
+      texts: [p.branch, p.title],
+    })),
   ]
-  return items.map((item) => {
-    const key = findKey(item.label)
-    return { ...item, taskKey: key && keys.has(key) ? key : null }
-  })
+  return items.map(({ texts, ...item }) => ({ ...item, taskKey: resolveKey(texts, keys) }))
 }
 
 // The six measures of one member in one sprint. Each measure keeps the items it counted.

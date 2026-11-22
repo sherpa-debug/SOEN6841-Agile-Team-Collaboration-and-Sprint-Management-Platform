@@ -34,7 +34,7 @@ function StarRating({ name, value, onChange, disabled }) {
 }
 
 // Peer check-in (FR8, D3 Fig. 7): one rating and one comment for each teammate, once per sprint
-export default function CheckIn({ sprint, members, currentUserId, checkins, onSave }) {
+export default function CheckIn({ sprint, members, currentUserId, checkins, locked = false, onSave }) {
   const saved = sprint ? myEntries(checkins, sprint.id, currentUserId) : {}
   const [entries, setEntries] = useState(saved)
   const [errors, setErrors] = useState({})
@@ -54,7 +54,7 @@ export default function CheckIn({ sprint, members, currentUserId, checkins, onSa
   const savedValues = Object.values(saved)
   const isSubmitted = savedValues.length > 0 && savedValues.every((e) => e.status === 'submitted')
   const submittedOn = isSubmitted ? savedValues[0].updatedAt : null
-  const readOnly = state !== 'open'
+  const readOnly = locked || state !== 'open'
 
   function update(id, changes) {
     setEntries((current) => ({ ...current, [id]: { ...current[id], ...changes } }))
@@ -85,6 +85,11 @@ export default function CheckIn({ sprint, members, currentUserId, checkins, onSa
         <span className="time-pill">about 2 minutes</span>
       </div>
 
+      {locked && (
+        <p className="notice" role="note">
+          TAs and instructors have read-only access, so they cannot fill in a check-in.
+        </p>
+      )}
       {state === 'not_open' && (
         <p className="notice" role="note">
           This check-in opens on {formatDay(sprint.start)}, when Sprint {sprint.number} starts.
