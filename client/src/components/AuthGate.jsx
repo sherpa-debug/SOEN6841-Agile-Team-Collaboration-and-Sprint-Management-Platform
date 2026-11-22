@@ -1,58 +1,63 @@
 import { useState } from 'react'
-import { createGitHubSession, joinTeam } from '../lib/auth.js'
+import { normalizeInviteCode } from '../lib/auth.js'
+import { apiRequest } from '../lib/api.js'
 
-export default function AuthGate({ session, onSessionChange }) {
-  const [inviteCode, setInviteCode] = useState('')
-  const [error, setError] = useState(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.has('error')) {
-      return 'GitHub sign-in was cancelled or could not be completed.'
-    }
-    if (params.has('code')) {
-      return 'GitHub OAuth callback is not configured on this app. Use demo sign-in for now.'
-    }
-    return ''
-  })
+export default function AuthGate({ session, onSessionChange, initialError = '' }) {
+  const params = new URLSearchParams(window.location.search)
+  const [inviteCode, setInviteCode] = useState(() => params.get('invite') || '')
+  const [teamName, setTeamName] = useState('')
+  const [error, setError] = useState(() => initialError || (
+    params.has('authError') ? 'GitHub sign-in was cancelled or could not be completed.' : ''
+  ))
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   function handleGitHubSignIn() {
     setError('')
-    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID
-
-    if (clientId) {
-      const redirectUri = `${window.location.origin}/auth/callback`
-      const state = crypto.randomUUID()
-      sessionStorage.setItem('github-oauth-state', state)
-      const params = new URLSearchParams({
-        client_id: clientId,
-        redirect_uri: redirectUri,
-        scope: 'read:user read:org',
-        state,
-      })
-      window.location.assign(`https://github.com/login/oauth/authorize?${params}`)
-      return
-    }
-
-    const demoProfile = {
-      id: 'demo-moncef',
-      login: 'moncef',
-      name: 'Moncef',
-    }
-    onSessionChange(createGitHubSession(demoProfile))
+    const returnTo = `${window.location.pathname}${window.location.search}`
+    window.location.assign(`/api/auth/github?returnTo=${encodeURIComponent(returnTo)}`)
   }
 
-  function handleJoin(event) {
+  async function handleJoin(event) {
     event.preventDefault()
-    const result = joinTeam(inviteCode, session)
-    if (!result.ok) {
-      setError(result.error)
-      return
-    }
+    setIsSubmitting(true)
     setError('')
-    onSessionChange(result.session)
+    try {
+      const { session: nextSession } = await apiRequest('/api/teams/join', {
+        method: 'POST',
+        body: { code: normalizeInviteCode(inviteCode) },
+      })
+      onSessionChange(nextSession)
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  function handleSignOut() {
-    onSessionChange(null)
+  async function handleCreateTeam(event) {
+    event.preventDefault()
+    setIsSubmitting(true)
+    setError('')
+    try {
+      const { session: nextSession } = await apiRequest('/api/teams', {
+        method: 'POST',
+        body: { name: teamName },
+      })
+      onSessionChange(nextSession)
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  async function handleSignOut() {
+    try {
+      await apiRequest('/api/auth/logout', { method: 'POST' })
+      onSessionChange(null)
+    } catch (requestError) {
+      setError(requestError.message)
+    }
   }
 
   if (!session) {
@@ -62,13 +67,11 @@ export default function AuthGate({ session, onSessionChange }) {
           <div className="auth-logo">SprintProof</div>
           <h1 id="auth-title">Welcome to SprintProof</h1>
           <p>Sign in with GitHub to track and manage your team's sprint work.</p>
+          {error && <p className="auth-error" role="alert">{error}</p>}
           <button type="button" className="github-button" onClick={handleGitHubSignIn}>
             <span className="github-mark" aria-hidden="true">GH</span>
             Sign in with GitHub
           </button>
-          {!import.meta.env.VITE_GITHUB_CLIENT_ID && (
-            <p className="auth-hint">Demo mode — no GitHub credentials configured.</p>
-          )}
         </section>
       </main>
     )
@@ -89,10 +92,10 @@ export default function AuthGate({ session, onSessionChange }) {
               <small>@{session.login}</small>
             </div>
           </div>
-          <h1 id="join-title">Join a team</h1>
-          <p>Enter the invite code shared by a team member.</p>
+          <h1 id="join-title">Join or create a team</h1>
+          <p>Use an invitation shared by a teammate, or start a new team.</p>
           <form className="invite-form" onSubmit={handleJoin}>
-            <label htmlFor="invite-code">Invite code</label>
+            <label htmlFor="invite-code">Invitation code</label>
             <input
               id="invite-code"
               name="inviteCode"
@@ -101,13 +104,36 @@ export default function AuthGate({ session, onSessionChange }) {
                 setInviteCode(event.target.value)
                 setError('')
               }}
-              placeholder="e.g. ALPHA24"
+              placeholder="Paste an invitation code"
               autoComplete="off"
               autoCapitalize="characters"
               required
             />
             {error && <p className="auth-error" role="alert">{error}</p>}
-            <button type="submit" className="primary-button">Join team</button>
+            <button type="submit" className="primary-button" disabled={isSubmitting}>
+              {isSubmitting ? 'Joining…' : 'Join team'}
+            </button>
+          </form>
+          <div className="auth-divider"><span>or create a team</span></div>
+          <form className="invite-form" onSubmit={handleCreateTeam}>
+            <label htmlFor="team-name">Team name</label>
+            <input
+              id="team-name"
+              name="teamName"
+              className="team-name-input"
+              value={teamName}
+              onChange={(event) => {
+                setTeamName(event.target.value)
+                setError('')
+              }}
+              minLength={2}
+              maxLength={60}
+              placeholder="e.g. Product team"
+              required
+            />
+            <button type="submit" className="primary-button" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating…' : 'Create team'}
+            </button>
           </form>
           <button type="button" className="link-button auth-signout" onClick={handleSignOut}>
             Sign out
