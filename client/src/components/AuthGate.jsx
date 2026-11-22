@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { normalizeInviteCode } from '../lib/auth.js'
 import { apiRequest } from '../lib/api.js'
 
-export default function AuthGate({ session, onSessionChange, initialError = '' }) {
+export default function AuthGate({ session, onSessionChange, initialError = '', onDemo }) {
   const params = new URLSearchParams(window.location.search)
   const [inviteCode, setInviteCode] = useState(() => params.get('invite') || '')
   const [teamName, setTeamName] = useState('')
@@ -68,10 +68,21 @@ export default function AuthGate({ session, onSessionChange, initialError = '' }
           <h1 id="auth-title">Welcome to SprintProof</h1>
           <p>Sign in with GitHub to track and manage your team's sprint work.</p>
           {error && <p className="auth-error" role="alert">{error}</p>}
-          <button type="button" className="github-button" onClick={handleGitHubSignIn}>
-            <span className="github-mark" aria-hidden="true">GH</span>
-            Sign in with GitHub
-          </button>
+          {onDemo ? (
+            <>
+              <p className="auth-error" role="status">
+                GitHub sign-in is not available on this site yet. You can look around with the demo team.
+              </p>
+              <button type="button" className="github-button" onClick={onDemo}>
+                Continue with demo data
+              </button>
+            </>
+          ) : (
+            <button type="button" className="github-button" onClick={handleGitHubSignIn}>
+              <span className="github-mark" aria-hidden="true">GH</span>
+              Sign in with GitHub
+            </button>
+          )}
         </section>
       </main>
     )
