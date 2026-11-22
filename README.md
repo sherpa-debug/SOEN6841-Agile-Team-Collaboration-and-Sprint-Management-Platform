@@ -30,9 +30,23 @@ cd client
 npm ci
 ```
 
-### 3. Start the development server
+### 3. Configure GitHub OAuth and PostgreSQL
+
+Create a GitHub OAuth App with this callback URL:
+
+```text
+http://localhost:5173/api/auth/callback
+```
+
+Follow [`server/README.md`](server/README.md) to create the database and configure `server/.env`. Set a random `SESSION_SECRET` of at least 32 characters. Keep the GitHub client secret and session key on the server; never use client-side `VITE_` variables for secrets.
+
+### 4. Start the API and frontend
+
+In one terminal, run the API from `server/`:
 
 ```bash
+cd server
+npm ci
 npm run dev
 ```
 
@@ -59,6 +73,14 @@ Create a GitHub OAuth App and set its authorization callback URL to:
 
 ```text
 http://localhost:5173/auth/callback
+```
+
+In another terminal, run the client from `client/`:
+
+```bash
+cd client
+npm ci
+npm run dev
 ```
 
 Create `client/.env.local`:
